@@ -1,0 +1,11 @@
+# Security review / release limitations
+
+- Synthetic payment validation and state guardrails tested. No real payment APIs, QR collection, dynamic code execution or credentials requested by the demo.
+- Voice secrets are server-only; environment examples are placeholders; private env files and generated artifacts ignored.
+- Signed URL requires an app session, exact Origin and client header. Private shared-code gate with HMAC cookie, HttpOnly/SameSite, Secure in production. Rate limit 8 requests/10 minutes/process; body bound 2 KB; provider request timeout 10 seconds; safe errors; no upstream body/log passthrough. Configuration fails closed when missing.
+- Production CSP blocks arbitrary scripts/objects/framing; wasm compilation and engine blob workers explicitly allowed. Inline styles are required for projected annotations, no inline scripts. Camera/mic restricted to self. Vite development uses its own developer headers and is not a production security boundary.
+- **Deployment boundary:** Vercel limiters are instance-local. A shared limiter/gateway and real user authentication are required before public paid voice. Client session duration is a UX guard, not an enforceable cost cap. Set provider limits and budgets. VOICE_ENABLED defaults false.
+- Provider privacy/retention and physical cleanup/echo remain unverified; see VOICE_SETUP.md and DEVICE_TEST_CHECKLIST.md.
+- npm audit on 18 November 2026 reports a high-severity **development dependency** advisory for picomatch <=4.0.7 (GHSA-fc5q-39xc-vjpf), propagated through Vite/Vitest/tinyglobby/fdir. Registry latest was 4.0.7 and audit reported no nonbreaking fix. This ReDoS advisory concerns crafted glob patterns. No visitor-supplied glob is compiled by this app and these build tools are absent from production runtime. Mitigation: keep build/test inputs trusted, never expose the Vite dev server to untrusted internet users, and rebuild with the upstream fixed release when available. This is an outstanding dependency advisory, not a clean-audit claim. Do not run audit fix --force without compatibility checks. Production dependency audit is recorded separately.
+
+Public release of paid voice and claims of real-device AR readiness are intentionally blocked pending the documented controls and acceptance evidence.

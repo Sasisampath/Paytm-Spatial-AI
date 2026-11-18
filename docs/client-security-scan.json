@@ -1,0 +1,4 @@
+{
+  "scope": "Application src and generated JavaScript chunks; pattern check, not a full security audit",
+  "findings": []
+}
