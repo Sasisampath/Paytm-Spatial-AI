@@ -1,0 +1,17 @@
+{
+  "repository": "Sasisampath/Paytm-Spatial-AI",
+  "implementationCommit": "714f2a6ba6e47caff4207fadb4e6d316a7c9a55e",
+  "runId": 44284284051,
+  "jobId": 134732799316,
+  "conclusion": "success",
+  "install": "success",
+  "build": "success",
+  "unitTestsPassed": 30,
+  "browserTestsPassed": 16,
+  "browserTestsSkipped": 2,
+  "skips": "Chromium-specific synthetic XR and real-runtime tests are skipped for the WebKit project. Seven UI tests passed in both projects.",
+  "url": "https://github.com/Sasisampath/Paytm-Spatial-AI/actions/runs/44284284051",
+  "artifact": "https://github.com/Sasisampath/Paytm-Spatial-AI/actions/runs/44284284051/artifacts/14418004098",
+  "physicalDeviceTesting": "NOT TESTED",
+  "liveElevenLabsSession": "NOT CONFIGURED / NOT TESTED"
+}

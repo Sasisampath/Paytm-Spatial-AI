@@ -37,6 +37,8 @@ Copy `.env.example` to `.env`. Configure a private authenticated ElevenLabs agen
 
 ## What works / evidence boundaries
 
+Verified CI: build, 30 unit/integration tests, and 16 Chromium/WebKit browser tests passed (2 Chromium-specific tests intentionally skipped in WebKit). [Run and browser artifacts](https://github.com/Sasisampath/Paytm-Spatial-AI/actions/runs/44284284051).
+
 - Onboarding, original CSS hero, lazy procedural Three model, orbit practice view, scale/rotation, source-backed feature/FAQ controls, safe responsive UI and synthetic receipt.
 - Real XR8 integration: sole SDK camera/render loop, stable measured horizontal support, world-scene anchor, tracking loss/recovery, reposition and resource cleanup. Physical iPhone/Android behaviour remains **UNVERIFIED**.
 - Runtime-validated, amount-limited and idempotent simulation; same service for UI and allowlisted voice tools. Success/failure/reset paths and original browser TTS demo announcement.

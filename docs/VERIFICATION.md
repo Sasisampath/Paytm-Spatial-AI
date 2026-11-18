@@ -1,6 +1,6 @@
 # Verification — 18 November 2026
 
-Build performed locally with Node v26.7.0 / npm 11.19.0. Factual evidence only. This is an MVP with remaining provider/device acceptance work, not a production-readiness certification.
+Build performed locally with Node v26.7.0 / npm 11.19.0; also verified on the Ubuntu GitHub Actions runner with Node 24. Factual evidence only. This is an MVP with remaining provider/device acceptance work, not a production-readiness certification.
 
 | Command / check | Actual result |
 | --- | --- |
@@ -11,7 +11,8 @@ Build performed locally with Node v26.7.0 / npm 11.19.0. Factual evidence only. 
 | `npx playwright install chromium webkit` | Installed matching Chromium 159 / WebKit 27.2 binaries. |
 | `npm run test:e2e -- --project=chromium` | ENVIRONMENT BLOCKED before test bodies. 9 launches failed in macOS process sandbox: `bootstrap_check_in ... MachPortRendezvousServer ... Permission denied (1100)`, SIGTRAP. A first system Chrome attempt also aborted. No Chromium test pass claimed. |
 | `npm run test:e2e -- --project=webkit tests/browser/app.spec.ts` | ENVIRONMENT BLOCKED before test bodies. 7 browser launches aborted (`Abort trap: 6`). No WebKit test pass claimed. |
-| Real SDK WASM/SLAM initialization-only Playwright test | Included, NOT RUN successfully because browser launch is blocked. Build hash checks prove packaging integrity, not runtime SLAM. |
+| `npm run test:e2e` on GitHub Actions | PASS: 16 passed, 2 skipped (1.5 minutes). Chromium: 9 passed, including synthetic XR lifecycle/world anchor and real SDK WASM/SLAM initialization with camera blocked. WebKit: 7 UI tests passed; 2 Chromium-specific XR/runtime tests intentionally skipped. [Verified run](https://github.com/Sasisampath/Paytm-Spatial-AI/actions/runs/44284284051), implementation commit `714f2a6ba6e47caff4207fadb4e6d316a7c9a55e`. |
+| Real SDK WASM/SLAM initialization-only check | PASS in Chromium on CI, no camera access. This validates package initialization, not physical tracking. |
 | Codex in-app browser, actual running dev + production app | Observed introduction, lazy 3D practice model, place, source-backed speaker highlight, ₹250 SUCCESS, explicit FAILED outcome, reset, invalid ₹0 error, voice-unavailable fallback, session end and the unsupported-desktop AR fallback. See screenshots. These are interactive checks, not Playwright suite passes. |
 | Responsive DOM/layout inspection | PASS for introduction and placed/confirmed practice view at 320×568, 375×812, 390×844, 428×926, plus desktop introduction at 1440×1000. No horizontal overflow. Canvas stays aligned to its frame; simulation labels displayed. `layout-checks.json`, `practice-layout-checks.json`. This is not a full screen-reader or phone safe-area certification. |
 | Production Express smoke test | HTTP 200 for introduction, expected CSP/security headers, `/api/voice/config` = disabled/demo. Built practice flow and provider-unavailable panel observed in the browser. |
@@ -23,9 +24,9 @@ Build performed locally with Node v26.7.0 / npm 11.19.0. Factual evidence only. 
 | Physical iPhone Safari / Android Chrome AR, audio echo, thermal performance | NOT TESTED. DEVICE_TEST_CHECKLIST.md remains explicit. |
 | Hosted deployment / HTTPS tunnel | NOT PERFORMED. Source delivery was requested; no hosting action taken. |
 
-## Remaining browser work
+## Browser evidence and physical acceptance
 
-Run `npm run test:e2e` in an ordinary development shell or the included Ubuntu GitHub Actions workflow with installed browsers. The checked-in synthetic XR fixture tests lifecycle, world anchoring and loss/cleanup; it never ships in production. SDK callback fixtures cannot prove real horizontal tracking or camera permissions. Original demo announcement completion/cancellation/timeout is also covered by unit tests. The agent tools use the same service tested above, but actual live ElevenLabs barge-in, language quality and SDK microphone/socket teardown still require a private agent and physical tests.
+The full browser suite passed on the included Ubuntu GitHub Actions workflow. [Browser evidence artifact](https://github.com/Sasisampath/Paytm-Spatial-AI/actions/runs/44284284051/artifacts/14418004098). The final report-only commit does not change the verified application source. The checked-in synthetic XR fixture tests lifecycle, world anchoring and loss/cleanup; it never ships in production. SDK callback fixtures cannot prove real horizontal tracking or camera permissions. Original demo announcement completion/cancellation/timeout is also covered by unit tests. The agent tools use the same service tested above, but actual live ElevenLabs barge-in, language quality and SDK microphone/socket teardown still require a private agent and physical tests.
 
 A live-edit dependency reinstall invalidated development-module URLs during inspection. The resulting lazy import error was contained by a new error boundary; the final built app's voice-unavailable panel loaded and worked under production CSP. Restart Vite after dependency changes rather than relying on stale optimized-module URLs.
 
