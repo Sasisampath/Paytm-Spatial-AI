@@ -4,7 +4,7 @@ Independent React/Vite/TypeScript frontend; Express backend for private ElevenLa
 
 - `src/app/App.tsx`: introduction, separate permission entry points, AR/practice orchestration, demo card, inspector, source-backed FAQ.
 - `src/components/ar/Stage.tsx`: lazy Three scene in practice mode, or one authoritative XR8 session. Practice never runs alongside XR8 and is visibly virtual.
-- `src/components/ar/SoundboxModel.ts`: original approximate 14×19×10 cm procedural device with decorative non-payment pattern, GPU resources and registered feature anchors. It does not represent a certified Paytm SKU. No third-party product photos, voice clips or models.
+- `src/components/ar/SoundboxModel.ts`: loads the self-hosted Soundbox 5.0 GLBs. Ground_Anchor is the ground-contact origin. The approximate X/Y/Z bounds are 94.4 × 91 × 114.4 mm, with the QR facing +Z. Named feature meshes receive temporary material highlights. The original materials return on deselection. The complete source asset hashes are pinned in tests/assets.test.mjs.
 - `src/lib/ar/engine.ts`: pinned XR8 binary lifecycle, sole camera and SDK render loop, fresh support sampling, world-scene placement, tracking loss/recovery, visibility pause/resume, resize and teardown. No competing camera preflight stream. Four fresh tracking samples are required to resume an already placed device. A new placement requires stable observed support. A physically tested drift/jump recovery policy remains required.
 - `placement.ts`, `ground-raycast.ts`: adapted from https://github.com/Sasisampath/Thiri---Digital-diwali at `a9f00dd9c88229caf650a8c021d3053ec4cbf440`. Require downward view, plausible distances, horizontal surface normal, four fresh consistent samples, or >=16 confident SLAM points spanning an observed horizontal hull. No assumed floor or feature-hit-only placement. Tightened freshness/position consistency for this app.
 - Thiri engine.ts, placement-controller.ts, reticle.ts, tracking.ts, types.ts and scan/placement/audio docs were inspected for lifecycle and placement patterns; festive code/assets were not ported. The reference clone is untouched.
@@ -17,7 +17,7 @@ The observed-support estimator is not semantic counter recognition. Reflective/d
 
 ## Performance
 
-Intro uses original CSS geometry, not Three/WebGL/camera. AR and voice chunks load on demand after explicit actions. Render frequency does not update React poses. Geometry/materials are reused; sampling is about 8 Hz, canvas pixel ratio capped at 1.5. Feature labels project registered world anchors. Practice uses one orbit-render loop and cancels it at exit. AR uses only the engine loop. GPU/microphone/device thermal performance is not physically measured.
+The hero viewer uses on-demand rendering for asset load, resize, orbit and feature changes. Compressed file bytes are shared between screens. Scenes own and dispose their geometry, textures, materials and controls on exit. The AR asset uses embedded WebP, the hero uses PNG, and the existing CSP permits image decoding from local blob URLs. AR has a single SDK render loop, samples surface support at about 8 Hz, and caps canvas pixel ratio at 1.5. Physical GPU, thermal and camera performance still require phone tests.
 
 ## Rights
 

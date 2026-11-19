@@ -1,152 +1,159 @@
 import * as T from "three";
-import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { Feature } from "../../lib/simulation/service";
-/** Original illustrative geometry, approximately 14 × 19 × 10 cm. No payment QR. */
-export class SoundboxModel {
-  root = new T.Group();
-  private features: Record<Feature, T.Object3D>;
-  private glow: T.Mesh;
-  constructor() {
-    const white = new T.MeshStandardMaterial({
-      color: 0xf5f8fa,
-      roughness: 0.36,
-    });
-    const blue = new T.MeshStandardMaterial({
-      color: 0x00b9e8,
-      roughness: 0.3,
-    });
-    const dark = new T.MeshStandardMaterial({
-      color: 0x102c43,
-      roughness: 0.8,
-    });
-    const mesh = (g: T.BufferGeometry, m: T.Material, x = 0, y = 0, z = 0) => {
-      const a = new T.Mesh(g, m);
-      a.position.set(x, y, z);
-      this.root.add(a);
-      return a;
-    };
-    mesh(new RoundedBoxGeometry(0.14, 0.18, 0.095, 3, 0.012), white, 0, 0.1, 0);
-    mesh(
-      new RoundedBoxGeometry(0.145, 0.024, 0.1, 2, 0.008),
-      blue,
-      0,
-      0.017,
-      0,
-    );
-    const panel = mesh(
-      new RoundedBoxGeometry(0.118, 0.115, 0.009, 2, 0.006),
-      dark,
-      0,
-      0.116,
-      0.047,
-    );
-    const c = document.createElement("canvas");
-    c.width = 512;
-    c.height = 512;
-    const ctx = c.getContext("2d")!;
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, 512, 512);
-    ctx.fillStyle = "#142f45";
-    ctx.font = "bold 52px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("SOUNDBOX", 256, 75);
-    // Decorative pattern deliberately crossed out; cannot encode a payment destination.
-    for (let y = 0; y < 9; y++)
-      for (let x = 0; x < 9; x++)
-        if ((x * 7 + y * 3) % 5 < 2) {
-          ctx.fillRect(120 + x * 30, 115 + y * 30, 21, 21);
-        }
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(90, 210, 340, 90);
-    ctx.fillStyle = "#15344d";
-    ctx.font = "bold 52px sans-serif";
-    ctx.fillText("DEMO", 256, 273);
-    ctx.font = "23px sans-serif";
-    ctx.fillText("NOT A PAYMENT QR", 256, 458);
-    const texture = new T.CanvasTexture(c);
-    texture.colorSpace = T.SRGBColorSpace;
-    mesh(
-      new T.PlaneGeometry(0.102, 0.102),
-      new T.MeshBasicMaterial({ map: texture }),
-      0,
-      0.117,
-      0.052,
-    );
-    const speaker = new T.Group();
-    speaker.position.set(0, 0.04, 0.049);
-    this.root.add(speaker);
-    for (let y = 0; y < 3; y++)
-      for (let x = 0; x < 12; x++) {
-        const hole = new T.Mesh(new T.CircleGeometry(0.0013, 6), dark);
-        hole.position.set((x - 5.5) * 0.006, (y - 1) * 0.004, 0.003);
-        speaker.add(hole);
-      }
-    const power = mesh(
-      new T.CylinderGeometry(0.006, 0.006, 0.003, 16),
-      dark,
-      0.071,
-      0.08,
-      0,
-    );
-    power.rotation.z = Math.PI / 2;
-    const led = mesh(
-      new T.SphereGeometry(0.0023, 8, 8),
-      new T.MeshBasicMaterial({ color: 0x00b9e8 }),
-      0.045,
-      0.174,
-      0.047,
-    );
-    this.glow = new T.Mesh(
-      new T.TorusGeometry(0.024, 0.0015, 6, 40),
-      new T.MeshBasicMaterial({ color: 0x00caf1, depthTest: false }),
-    );
-    this.root.add(this.glow);
-    this.glow.visible = false;
-    this.features = { speaker, qr: panel, power, connectivity: led };
-    const shadowCanvas = document.createElement("canvas");
-    shadowCanvas.width = 64;
-    shadowCanvas.height = 64;
-    const s = shadowCanvas.getContext("2d")!;
-    const gradient = s.createRadialGradient(32, 32, 0, 32, 32, 32);
-    gradient.addColorStop(0, "rgba(8,30,50,.35)");
-    gradient.addColorStop(1, "rgba(8,30,50,0)");
-    s.fillStyle = gradient;
-    s.fillRect(0, 0, 64, 64);
-    const shadow = mesh(
-      new T.PlaneGeometry(0.26, 0.22),
-      new T.MeshBasicMaterial({
-        map: new T.CanvasTexture(shadowCanvas),
-        transparent: true,
-        depthWrite: false,
-      }),
-      0,
-      0.001,
-      0,
-    );
-    shadow.rotation.x = -Math.PI / 2;
+
+type Variant = "hero" | "ar";
+const bytes = new Map<Variant, Promise<ArrayBuffer>>();
+const featureNodes: Record<Feature, string> = {
+  qr: "QR_Panel",
+  speaker: "Speaker_Region",
+  power: "Top_Controls",
+  connectivity: "Status_Indicator",
+};
+
+function asset(variant: Variant) {
+  let result = bytes.get(variant);
+  if (!result) {
+    result = fetch(`/models/paytm-soundbox-5-${variant}.glb`)
+      .then((response) => {
+        if (!response.ok) throw Error("Soundbox download failed");
+        return response.arrayBuffer();
+      })
+      .catch((error) => {
+        bytes.delete(variant);
+        throw error;
+      });
+    bytes.set(variant, result);
   }
-  highlight(feature: Feature | null, now: number) {
-    this.glow.visible = !!feature;
-    if (feature) {
-      this.glow.position.copy(this.features[feature].position);
-      this.glow.position.z += 0.012;
-      this.glow.scale.setScalar(1 + Math.sin(now / 220) * 0.1);
+  return result;
+}
+
+function release(root: T.Object3D) {
+  const geometries = new Set<T.BufferGeometry>(),
+    materials = new Set<T.Material>(),
+    textures = new Set<T.Texture>();
+  root.traverse((node) => {
+    if (!(node instanceof T.Mesh)) return;
+    geometries.add(node.geometry);
+    for (const material of [node.material].flat()) {
+      materials.add(material);
+      for (const value of Object.values(material))
+        if (value instanceof T.Texture) textures.add(value);
+    }
+  });
+  textures.forEach((texture) => texture.dispose());
+  materials.forEach((material) => material.dispose());
+  geometries.forEach((geometry) => geometry.dispose());
+  root.removeFromParent();
+  root.clear();
+}
+
+export class SoundboxModel {
+  readonly root = new T.Group();
+  private active: Feature | null = null;
+  private originals = new Map<T.Mesh, T.Material | T.Material[]>();
+  private accents: T.Material[] = [];
+  private anchors = new Map<Feature, T.Vector3>();
+
+  static async load(variant: Variant) {
+    const loader = new GLTFLoader();
+    // Embedded WebP goes through img-src blob: under the existing production CSP.
+    loader.register((parser) => {
+      parser.textureLoader = new T.TextureLoader(parser.options.manager);
+      return { name: "SoundboxEmbeddedImages" };
+    });
+    const data = await asset(variant);
+    try {
+      const { scene } = await loader.parseAsync(data, "");
+      try {
+        return new SoundboxModel(scene);
+      } catch (error) {
+        release(scene);
+        throw error;
+      }
+    } catch (error) {
+      bytes.delete(variant);
+      throw error;
     }
   }
+
+  private constructor(private scene: T.Group) {
+    const ground = scene.getObjectByName("Ground_Anchor");
+    const qr = scene.getObjectByName("QR_Panel");
+    if (
+      !ground ||
+      qr?.userData.payable !== false ||
+      qr.userData.qr_payload !== "PAYTM REALITY LAB DEMO - NOT A PAYMENT CODE"
+    )
+      throw Error("Invalid Soundbox asset");
+    let texturedQR = false;
+    qr.traverse((node) => {
+      if (node instanceof T.Mesh)
+        texturedQR ||= [node.material].flat().some((m) => m.map?.image);
+    });
+    if (!texturedQR) throw Error("Soundbox sticker could not load");
+    scene.position.sub(ground.getWorldPosition(new T.Vector3()));
+    this.root.add(scene);
+    for (const [feature, name] of Object.entries(featureNodes)) {
+      const node = scene.getObjectByName(name);
+      if (!node) throw Error(`Missing ${name}`);
+      this.anchors.set(
+        feature as Feature,
+        new T.Box3().setFromObject(node).getCenter(new T.Vector3()),
+      );
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 64;
+    const ctx = canvas.getContext("2d")!;
+    const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, "rgba(8,26,48,0.38)");
+    gradient.addColorStop(1, "rgba(8,26,48,0)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 64, 64);
+    const shadow = new T.Mesh(
+      new T.PlaneGeometry(0.16, 0.18),
+      new T.MeshBasicMaterial({
+        map: new T.CanvasTexture(canvas),
+        transparent: true,
+        depthWrite: false,
+        toneMapped: false,
+      }),
+    );
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.y = -0.0001;
+    this.root.add(shadow);
+  }
+
+  highlight(feature: Feature | null) {
+    if (feature === this.active) return;
+    this.originals.forEach((material, mesh) => {
+      mesh.material = material;
+    });
+    this.originals.clear();
+    this.accents.forEach((material) => material.dispose());
+    this.accents = [];
+    this.active = feature;
+    if (!feature) return;
+    this.scene.getObjectByName(featureNodes[feature])!.traverse((node) => {
+      if (!(node instanceof T.Mesh)) return;
+      this.originals.set(node, node.material);
+      const accent = (material: T.MeshStandardMaterial) => {
+        const copy = material.clone();
+        copy.emissive?.setHex(0x009eca);
+        copy.emissiveIntensity = 0.65;
+        this.accents.push(copy);
+        return copy;
+      };
+      node.material = Array.isArray(node.material)
+        ? node.material.map(accent)
+        : accent(node.material);
+    });
+  }
   anchor(feature: Feature) {
-    return this.features[feature].getWorldPosition(new T.Vector3());
+    return this.root.localToWorld(this.anchors.get(feature)!.clone());
   }
   dispose() {
-    this.root.removeFromParent();
-    this.root.traverse((o) => {
-      if (o instanceof T.Mesh) {
-        o.geometry.dispose();
-        for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
-          for (const v of Object.values(m))
-            if (v instanceof T.Texture) v.dispose();
-          m.dispose();
-        }
-      }
-    });
+    this.highlight(null);
+    release(this.root);
   }
 }

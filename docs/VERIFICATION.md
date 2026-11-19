@@ -1,4 +1,4 @@
-# Verification — 18 November 2026
+# Initial release verification (before Soundbox 5.0)
 
 Build performed locally with Node v26.7.0 / npm 11.19.0; also verified on the Ubuntu GitHub Actions runner with Node 24. Factual evidence only. This is an MVP with remaining provider/device acceptance work, not a production-readiness certification.
 

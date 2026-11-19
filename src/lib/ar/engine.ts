@@ -1,3 +1,4 @@
+import { mobileDevice } from "./mobile";
 import * as T from "three";
 import { GroundPlacement, aim } from "./placement";
 import { GroundRaycast } from "./ground-raycast";
@@ -76,6 +77,7 @@ export class ARSession {
   private feature: Feature | null = null;
   private scale = 1;
   private rotation = 0;
+  private groundRotation = new T.Quaternion();
   private recovery = 0;
   private lastRecovery = 0;
   private previousPosition = new T.Vector3();
@@ -110,6 +112,7 @@ export class ARSession {
     owner = this;
     try {
       if (
+        !mobileDevice() ||
         !window.isSecureContext ||
         !navigator.mediaDevices?.getUserMedia ||
         typeof WebGLRenderingContext === "undefined"
@@ -130,6 +133,21 @@ export class ARSession {
         );
         return;
       }
+      let model: SoundboxModel;
+      try {
+        model = await SoundboxModel.load("ar");
+      } catch {
+        if (this.live())
+          this.fail(
+            "The Soundbox model could not load. Check your connection and retry.",
+          );
+        return;
+      }
+      if (!this.live()) {
+        model.dispose();
+        return;
+      }
+      this.model = model;
       await this.xr.initialize();
       if (!this.live()) return;
       await this.xr.loadChunk("slam");
@@ -193,14 +211,13 @@ export class ARSession {
     }
   }
   private onStart() {
-    if (!this.live() || !this.xr) return;
+    if (!this.live() || !this.xr || !this.model) return;
     this.scene = this.xr.Threejs.xrScene();
     this.scene.camera.position.set(0, 1.5, 0);
     this.xr.XrController.updateCameraProjectionMatrix({
       origin: this.scene.camera.position,
       facing: this.scene.camera.quaternion,
     });
-    this.model = new SoundboxModel();
     this.model.root.visible = false;
     this.scene.scene.add(this.model.root);
     this.scene.scene.add(new T.HemisphereLight(0xffffff, 0x617688, 3));
@@ -208,7 +225,7 @@ export class ARSession {
     light.position.set(2, 4, 3);
     this.scene.scene.add(light);
     this.ring = new T.Mesh(
-      new T.RingGeometry(0.095, 0.1, 64),
+      new T.RingGeometry(0.073, 0.076, 64),
       new T.MeshBasicMaterial({
         color: 0x00b9e8,
         side: T.DoubleSide,
@@ -323,10 +340,7 @@ export class ARSession {
           .copy(this.pose!.position)
           .add(new T.Vector3(0, 0.002, 0));
     }
-    this.model.highlight(
-      this.feature,
-      matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : now,
-    );
+    this.model.highlight(this.feature);
     if (this.feature && this.placed) {
       const p = this.model.anchor(this.feature).project(this.scene.camera);
       this.annotate({
@@ -352,6 +366,7 @@ export class ARSession {
       performance.now() - this.pose.support.updatedAt > 350
     )
       return false;
+    this.groundRotation.copy(this.pose.rotation);
     this.placed = true;
     this.recovery = 4;
     this.update({ state: "PLACED", placed: true, canPlace: false });
@@ -372,7 +387,8 @@ export class ARSession {
     this.rotation = rotation;
     if (this.model) {
       this.model.root.scale.setScalar(Math.max(0.75, Math.min(1.25, scale)));
-      this.model.root.rotation.y = rotation;
+      this.model.root.quaternion.copy(this.groundRotation);
+      this.model.root.rotateY(rotation);
     }
   }
   private lose() {
