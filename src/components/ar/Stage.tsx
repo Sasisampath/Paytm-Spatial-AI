@@ -70,7 +70,7 @@ export default function Stage({
     let model: SoundboxModel | undefined;
     const scene = new T.Scene();
     const camera = new T.PerspectiveCamera(32, 1, 0.005, 5);
-    camera.position.set(0.115, 0.122, 0.218);
+    camera.position.set(0.133, 0.132, 0.252);
     scene.add(new T.HemisphereLight(0xffffff, 0xb4c7db, 2.4));
     const key = new T.DirectionalLight(0xfffaf5, 2.2);
     key.position.set(-1, 2, 3);
@@ -79,7 +79,7 @@ export default function Stage({
     renderer.toneMapping = T.NeutralToneMapping;
     renderer.setClearColor(0x000000, 0);
     const controls = new OrbitControls(camera, element);
-    controls.target.set(0, 0.045, 0);
+    controls.target.set(0, 0.04, 0);
     controls.enablePan = false;
     controls.minDistance = 0.14;
     controls.maxDistance = 0.46;

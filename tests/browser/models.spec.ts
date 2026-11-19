@@ -1,9 +1,13 @@
 import { test, expect } from "@playwright/test";
+import { fileURLToPath } from "node:url";
 for (const variant of ["ar", "hero"] as const) {
   test(`${variant} has decoded textures, scale, anchors, highlights and disposal`, async ({
     page,
   }) => {
     await page.goto("/");
+    await page.addScriptTag({
+      path: fileURLToPath(import.meta.resolve("jsqr")),
+    });
     const result = await page.evaluate(async (variant) => {
       const { SoundboxModel } = await import(
         /* @vite-ignore */ "/src/components/ar/SoundboxModel.ts"
@@ -56,9 +60,20 @@ for (const variant of ["ar", "hero"] as const) {
       const mappedTextures = [...maps].filter(
         (t) => t.image?.naturalWidth > 0,
       ).length;
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 512;
+      const context = canvas.getContext("2d")!;
+      const qrMesh = qr.getObjectByProperty("isMesh", true);
+      context.drawImage(qrMesh.material.map.image, 0, 0, 512, 512);
+      const decoded = (window as any).jsQR(
+        context.getImageData(0, 0, 512, 512).data,
+        512,
+        512,
+      )?.data;
       const qrFront = model.anchor("qr").z > 0;
       model.dispose();
       return {
+        decoded,
         dimensions,
         groundPosition,
         qrFront,
@@ -79,6 +94,7 @@ for (const variant of ["ar", "hero"] as const) {
       payable: false,
       qr_payload: "PAYTM REALITY LAB DEMO - NOT A PAYMENT CODE",
     });
+    expect(result.decoded).toBe("PAYTM REALITY LAB DEMO - NOT A PAYMENT CODE");
     expect(result.qrFront && result.highlights).toBe(true);
     expect(result.mappedTextures).toBeGreaterThanOrEqual(3);
     expect(result.disposed).toBe(result.resources);
