@@ -5,6 +5,7 @@ import { SoundboxModel } from "./SoundboxModel";
 import { ARSession } from "../../lib/ar/engine";
 import type { ARSnapshot } from "../../lib/ar/types";
 import type { Feature } from "../../lib/simulation/service";
+
 export default function Stage({
   mode,
   onStatus,
@@ -20,112 +21,134 @@ export default function Stage({
   scale: number;
   rotation: number;
 }) {
-  const canvas = useRef<HTMLCanvasElement>(null),
-    model = useRef<SoundboxModel | null>(null),
-    featureRef = useRef(feature),
-    label = useRef<HTMLSpanElement>(null);
-  featureRef.current = feature;
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const label = useRef<HTMLSpanElement>(null);
+  const paint = useRef<() => void>(() => {});
+  const settings = useRef({ feature, scale, rotation });
   useEffect(() => {
-    if (!canvas.current) return;
+    const element = canvas.current!;
+    const annotate = (p: { x: number; y: number; visible: boolean }) => {
+      if (!label.current) return;
+      label.current.hidden = !p.visible;
+      if (p.visible) {
+        label.current.style.left = `${p.x * 100}%`;
+        label.current.style.top = `${p.y * 100}%`;
+      }
+    };
     if (mode === "ar") {
-      const s = new ARSession(canvas.current, onStatus, (p) => {
-        if (label.current) {
-          label.current.hidden = !p.visible;
-          label.current.style.left = `${p.x * 100}%`;
-          label.current.style.top = `${p.y * 100}%`;
-        }
-      });
-      sessionRef.current = s;
-      void s.start();
+      const session = new ARSession(element, onStatus, annotate);
+      sessionRef.current = session;
+      void session.start();
       return () => {
-        s.dispose();
+        session.dispose();
         sessionRef.current = null;
       };
     }
+    const report = (error: string | null) =>
+      onStatus({
+        state: error ? "ERROR" : "READY",
+        placed: false,
+        tracking: !error,
+        canPlace: !error,
+        source: "practice",
+        error,
+      });
     let renderer: T.WebGLRenderer;
     try {
       renderer = new T.WebGLRenderer({
-        canvas: canvas.current,
+        canvas: element,
         antialias: true,
         alpha: true,
       });
     } catch {
-      onStatus({
-        state: "ERROR",
-        placed: false,
-        tracking: false,
-        canPlace: false,
-        error:
-          "This browser could not start a 3D view. Try a WebGL-capable browser.",
-        source: "practice",
-      });
+      report(
+        "This browser could not open the viewer. Try a WebGL-capable browser.",
+      );
       return;
     }
-    const scene = new T.Scene(),
-      camera = new T.PerspectiveCamera(36, 1, 0.01, 20);
-    camera.position.set(0.34, 0.24, 0.47);
-    const m = new SoundboxModel();
-    model.current = m;
-    scene.add(m.root);
-    scene.add(new T.HemisphereLight(0xffffff, 0x8fabc2, 3));
-    const sun = new T.DirectionalLight(0xffffff, 4);
-    sun.position.set(2, 3, 4);
-    scene.add(sun);
+    let disposed = false;
+    let model: SoundboxModel | undefined;
+    const scene = new T.Scene();
+    const camera = new T.PerspectiveCamera(32, 1, 0.005, 5);
+    camera.position.set(0.115, 0.122, 0.218);
+    scene.add(new T.HemisphereLight(0xffffff, 0xb4c7db, 2.4));
+    const key = new T.DirectionalLight(0xfffaf5, 2.2);
+    key.position.set(-1, 2, 3);
+    scene.add(key);
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
-    renderer.outputColorSpace = T.SRGBColorSpace;
+    renderer.toneMapping = T.NeutralToneMapping;
     renderer.setClearColor(0x000000, 0);
-    const controls = new OrbitControls(camera, canvas.current);
-    controls.target.set(0, 0.09, 0);
+    const controls = new OrbitControls(camera, element);
+    controls.target.set(0, 0.045, 0);
     controls.enablePan = false;
-    controls.minDistance = 0.3;
-    controls.maxDistance = 0.9;
+    controls.minDistance = 0.14;
+    controls.maxDistance = 0.46;
     controls.maxPolarAngle = Math.PI / 2;
     controls.update();
+    const draw = () => {
+      if (!model || disposed) return;
+      const { feature, scale, rotation } = settings.current;
+      model.root.scale.setScalar(scale);
+      model.root.rotation.y = rotation;
+      model.highlight(feature);
+      renderer.render(scene, camera);
+      if (feature) {
+        const p = model.anchor(feature).project(camera);
+        annotate({ x: (p.x + 1) / 2, y: (1 - p.y) / 2, visible: true });
+      } else annotate({ x: 0, y: 0, visible: false });
+    };
+    paint.current = draw;
+    controls.addEventListener("change", draw);
     const resize = () => {
-      const b = canvas.current!.getBoundingClientRect();
-      renderer.setSize(b.width, b.height, false);
-      camera.aspect = b.width / b.height;
+      const box = element.getBoundingClientRect();
+      if (!box.width || !box.height) return;
+      renderer.setSize(box.width, box.height, false);
+      camera.aspect = box.width / box.height;
       camera.updateProjectionMatrix();
+      draw();
     };
     const observer = new ResizeObserver(resize);
-    observer.observe(canvas.current);
+    observer.observe(element);
     resize();
-    let raf = 0;
-    const draw = (now: number) => {
-      m.highlight(
-        featureRef.current,
-        matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : now,
-      );
-      controls.update();
-      renderer.render(scene, camera);
-      if (featureRef.current && label.current) {
-        const p = m.anchor(featureRef.current).project(camera);
-        label.current.hidden = false;
-        label.current.style.left = `${(p.x + 1) * 50}%`;
-        label.current.style.top = `${(1 - p.y) * 50}%`;
-      } else if (label.current) label.current.hidden = true;
-      raf = requestAnimationFrame(draw);
+    const lost = (event: Event) => {
+      event.preventDefault();
+      report("The 3D display was interrupted. Retry the viewer.");
     };
-    raf = requestAnimationFrame(draw);
+    element.addEventListener("webglcontextlost", lost);
+    SoundboxModel.load("hero")
+      .then((asset) => {
+        if (disposed) {
+          asset.dispose();
+          return;
+        }
+        model = asset;
+        scene.add(asset.root);
+        draw();
+        report(null);
+      })
+      .catch(() => {
+        if (!disposed)
+          report(
+            "The Soundbox model could not load. Check your connection and retry.",
+          );
+      });
     return () => {
-      cancelAnimationFrame(raf);
+      disposed = true;
+      paint.current = () => {};
       observer.disconnect();
+      element.removeEventListener("webglcontextlost", lost);
       controls.dispose();
-      m.dispose();
+      model?.dispose();
       renderer.dispose();
-      model.current = null;
+      renderer.forceContextLoss();
     };
-  }, [mode]);
+  }, [mode, onStatus, sessionRef]);
   useEffect(() => {
+    settings.current = { feature, scale, rotation };
     sessionRef.current?.setFeature(feature);
-  }, [feature]);
-  useEffect(() => {
     sessionRef.current?.setTransform(scale, rotation);
-    if (model.current) {
-      model.current.root.scale.setScalar(scale);
-      model.current.root.rotation.y = rotation;
-    }
-  }, [scale, rotation]);
+    paint.current();
+  }, [feature, scale, rotation, sessionRef]);
   return (
     <>
       <canvas
@@ -134,16 +157,16 @@ export default function Stage({
         aria-label={
           mode === "ar"
             ? "World-tracked Soundbox camera view"
-            : "Illustrative 3D Soundbox. Drag to orbit."
+            : "Soundbox 5.0 in 3D. Drag to rotate."
         }
       />
       <span ref={label} hidden className="world-label">
         {feature &&
           {
             speaker: "Speaker",
-            qr: "Illustrative QR area",
-            power: "Power",
-            connectivity: "Connectivity",
+            qr: "Demo QR",
+            power: "Top controls",
+            connectivity: "Status indicator",
           }[feature]}
       </span>
     </>

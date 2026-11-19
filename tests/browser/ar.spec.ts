@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 async function mockXR(page: any) {
   await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", { value: "Android Mobile" });
     const w = window as any;
     const t = (w.testAR = {
       calls: 0,
@@ -116,7 +117,10 @@ test("synthetic XR requires real support, keeps a world anchor, blocks loss and 
   await mockXR(page);
   await page.goto("/");
   expect(await page.evaluate(() => (window as any).testAR.calls)).toBe(0);
+  await page.getByRole("button", { name: "Explore Soundbox" }).click();
   await page.getByRole("button", { name: "Experience in AR" }).click();
+  expect(await page.evaluate(() => (window as any).testAR.calls)).toBe(0);
+  await page.getByRole("button", { name: "Enable camera" }).click();
   await expect
     .poll(() => page.evaluate(() => (window as any).testAR.calls))
     .toBe(1);
@@ -207,4 +211,41 @@ test("real binary initializes WASM and SLAM without camera use", async ({
     return { initialized: xr.isInitialized(), calls };
   });
   expect(result).toEqual({ initialized: true, calls: 0 });
+});
+
+test("AR model failure retries before camera ownership; denied camera is recoverable", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName !== "chromium",
+    "Synthetic camera uses canvas captureStream",
+  );
+  await mockXR(page);
+  let requests = 0;
+  await page.route("**/models/*-ar.glb", async (route) => {
+    if (++requests === 1)
+      return route.fulfill({ status: 503, body: "Unavailable" });
+    await route.continue();
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Explore Soundbox" }).click();
+  await page.getByRole("button", { name: "Experience in AR" }).click();
+  await page.getByRole("button", { name: "Enable camera" }).click();
+  await expect(page.getByRole("alert")).toContainText("model could not load");
+  expect(await page.evaluate(() => (window as any).testAR.calls)).toBe(0);
+  await page.getByRole("button", { name: "Retry AR" }).click();
+  await expect
+    .poll(() => page.evaluate(() => (window as any).testAR.calls))
+    .toBe(1);
+  await page.evaluate(() =>
+    (window as any).testAR.modules
+      .at(-1)
+      .onException("NotAllowedError: Permission denied"),
+  );
+  await expect(page.getByRole("alert")).toContainText("Camera access is off");
+  await page.getByRole("button", { name: "Explore without camera" }).click();
+  await expect(
+    page.getByRole("button", { name: "Place practice device" }),
+  ).toBeEnabled();
 });

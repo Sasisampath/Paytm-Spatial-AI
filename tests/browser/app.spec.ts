@@ -9,6 +9,12 @@ for (const [width, height] of [
     page,
     browserName,
   }) => {
+    await page.addInitScript(() =>
+      Object.defineProperty(navigator, "userAgent", {
+        value:
+          "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1",
+      }),
+    );
     await page.setViewportSize({ width, height });
     await page.addInitScript(() => {
       (window as any).__mediaCalls = 0;
@@ -19,17 +25,26 @@ for (const [width, height] of [
     });
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { name: "Hear it. See it. Try it." }),
+      page.getByRole("heading", { name: "Spatial studio." }),
     ).toBeVisible();
     expect(await page.evaluate(() => (window as any).__mediaCalls)).toBe(0);
     expect(
       await page.locator("body").evaluate((e) => e.scrollWidth <= innerWidth),
     ).toBe(true);
+    await expect(
+      page.getByText("Drag to rotate", { exact: false }),
+    ).toBeVisible();
     if (browserName === "chromium")
       await page.screenshot({
         path: `docs/screenshots/intro-${width}.png`,
         fullPage: true,
       });
+    await page.getByRole("button", { name: "Explore Soundbox" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Soundbox 5.0" }),
+    ).toBeVisible();
+    if (browserName === "chromium")
+      await page.screenshot({ path: `docs/screenshots/details-${width}.png` });
     await page.getByRole("button", { name: "Explore without camera" }).click();
     await expect(
       page.getByRole("button", { name: "Simulate payment", exact: true }),
@@ -77,23 +92,52 @@ for (const [width, height] of [
     ).toBeVisible();
   });
 }
-test("AR errors preserve an honest camera-free fallback", async ({ page }) => {
-  test.setTimeout(60000);
-  await page.goto("/");
-  await page.getByRole("button", { name: "Experience in AR" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Let’s try another way." }),
-  ).toBeVisible({ timeout: 45000 });
-  await page.getByRole("button", { name: "Explore without camera" }).click();
-  await expect(
-    page.getByRole("button", { name: "Place practice device" }),
-  ).toBeVisible();
-});
+for (const width of [1280, 1440]) {
+  test(`desktop phone frame and camera-free handoff at ${width}`, async ({
+    page,
+    browserName,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.addInitScript(() => {
+      (window as any).cameraCalls = 0;
+      navigator.mediaDevices.getUserMedia = async () => {
+        (window as any).cameraCalls++;
+        throw Error("Desktop camera");
+      };
+    });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Explore Soundbox" }).click();
+    await expect(
+      page.getByText("Drag to rotate", { exact: false }),
+    ).toBeVisible();
+    const frame = await page.locator(".desktop").boundingBox();
+    expect(frame!.width).toBeLessThan(450);
+    expect(Math.abs(frame!.x * 2 + frame!.width - width)).toBeLessThan(2);
+    expect(
+      await page
+        .locator(".phone-screen")
+        .evaluate((el) => el.clientWidth === el.scrollWidth),
+    ).toBe(true);
+    if (browserName === "chromium")
+      await page.screenshot({
+        path: `docs/screenshots/phone-frame-${width}.png`,
+      });
+    await page.getByRole("button", { name: "Experience in AR" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Open on your phone" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Enable camera" }),
+    ).toHaveCount(0);
+    expect(await page.evaluate(() => (window as any).cameraCalls)).toBe(0);
+  });
+}
 test("failed outcome, reset, reduced motion, keyboard access", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
+  await page.getByRole("button", { name: "Explore Soundbox" }).click();
   await page.getByRole("button", { name: "Explore without camera" }).click();
   await page.getByRole("button", { name: "Place practice device" }).click();
   await page.getByText("Demo outcome", { exact: true }).click();
@@ -116,6 +160,7 @@ test("desktop view renders the product and source-backed answers", async ({
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
+  await page.getByRole("button", { name: "Explore Soundbox" }).click();
   if (browserName === "chromium")
     await page.screenshot({
       path: "docs/screenshots/intro-desktop.png",

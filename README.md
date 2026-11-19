@@ -1,10 +1,8 @@
 # Paytm Reality Lab
 
-**Hear it. See it. Try it.** An independent mobile-first spatial product learning prototype: place an original illustrative Soundbox, explore its features, ask a private ElevenLabs guide, and try an unmistakably **SIMULATED — NO MONEY MOVED** payment.
+Explore Soundbox 5.0 in an interactive 3D viewer, place it on a counter using mobile AR, and hear a simulated ₹250 confirmation. On desktop, the mobile app runs inside a phone frame with mouse orbit controls and a QR link for phone handoff.
 
-Not affiliated with or endorsed by Paytm. No actual payment, merchant account, UPI collection, payment QR or Paytm transaction API. The approximate procedural model is not an official product render or a specific commercial device.
-
-![Introduction](docs/screenshots/intro-1440.jpg)
+This independent concept is unaffiliated with Paytm. The product sticker encodes the text `PAYTM REALITY LAB DEMO - NOT A PAYMENT CODE`. No money moves.
 
 ## Run locally
 
@@ -37,9 +35,7 @@ Copy `.env.example` to `.env`. Configure a private authenticated ElevenLabs agen
 
 ## What works / evidence boundaries
 
-Verified CI: build, 30 unit/integration tests, and 16 Chromium/WebKit browser tests passed (2 Chromium-specific tests intentionally skipped in WebKit). [Run and browser artifacts](https://github.com/Sasisampath/Paytm-Spatial-AI/actions/runs/44284284051).
-
-- Onboarding, original CSS hero, lazy procedural Three model, orbit practice view, scale/rotation, source-backed feature/FAQ controls, safe responsive UI and synthetic receipt.
+- The home, product details and practice tabletop use the 23,044-triangle hero asset. Mobile AR uses the 9,000-triangle version at its authored metre scale.
 - Real XR8 integration: sole SDK camera/render loop, stable measured horizontal support, world-scene anchor, tracking loss/recovery, reposition and resource cleanup. Physical iPhone/Android behaviour remains **UNVERIFIED**.
 - Runtime-validated, amount-limited and idempotent simulation; same service for UI and allowlisted voice tools. Success/failure/reset paths and original browser TTS demo announcement.
 - ElevenLabs current React provider/hooks integration, contextual updates, microphone opt-in, mute/stop/reconnect, transcript and authenticated signed-URL backend. Provider/phone tests remain required.
@@ -49,4 +45,4 @@ Verified CI: build, 30 unit/integration tests, and 16 Chromium/WebKit browser te
 
 Product FAQs cite official [what is a Soundbox](https://business.paytm.com/support/what-is-a-soundbox), [how it works](https://business.paytm.com/support/how-does-the-soundbox-work), and [product range](https://business.paytm.com/soundbox), retrieved 18 November 2026. No unverified current price, settlement-time, offline-operation or exact battery claims.
 
-AR support logic and preparation patterns adapted from the same owner's Thiri reference at a9f00dd9c88229caf650a8c021d3053ec4cbf440. No modifications or pushes to that reference. Runtime notices remain in [public/licenses/NOTICE.txt](public/licenses/NOTICE.txt). The 8th Wall binary is governed by its XR Engine License Agreement, **not MIT**; Three.js retains its MIT notice. No proprietary Paytm audio, device photograph or model was copied.
+AR support logic and preparation patterns adapted from the same owner's Thiri reference at a9f00dd9c88229caf650a8c021d3053ec4cbf440. No modifications or pushes to that reference. Runtime notices remain in [public/licenses/NOTICE.txt](public/licenses/NOTICE.txt). The 8th Wall binary is governed by its XR Engine License Agreement, **not MIT**; Three.js retains its MIT notice. The two unchanged Soundbox exports are self-hosted in `public/models/`. [Asset source at the imported revision](https://github.com/sasijazzhq/AR-voice-product-concept/tree/ac00721bc31e1190434449ed44a74081958a6cf5/paytm-soundbox-5).

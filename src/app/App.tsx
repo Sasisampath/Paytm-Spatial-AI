@@ -17,6 +17,8 @@ import {
   sources,
 } from "../data/paytm-soundbox-knowledge";
 import { announceDemo } from "../lib/voice/announcer";
+import { mobileDevice } from "../lib/ar/mobile";
+const PhoneHandoff = lazy(() => import("../components/PhoneHandoff"));
 const Stage = lazy(() => import("../components/ar/Stage"));
 const Voice = lazy(() => import("../lib/voice/VoicePanel"));
 function Icon({ name }: { name: string }) {
@@ -127,8 +129,11 @@ const initial: ARSnapshot = {
   source: "none",
 };
 export default function App() {
-  const [mode, setMode] = useState<"intro" | "ar" | "practice">("intro"),
+  const [mode, setMode] = useState<"intro" | "details" | "ar" | "practice">(
+      "intro",
+    ),
     [service, setService] = useState(() => new SimulationService()),
+    [prompt, setPrompt] = useState(false),
     [voice, setVoice] = useState(false),
     [amount, setAmount] = useState("250"),
     [issue, setIssue] = useState(""),
@@ -145,18 +150,21 @@ export default function App() {
   const receive = useCallback(
     (s: ARSnapshot) => {
       setStatus(s);
-      service.setEnvironment(s.placed, s.tracking, "ar");
+      service.setEnvironment(
+        s.placed,
+        s.tracking,
+        s.source === "practice" ? "practice" : "ar",
+      );
     },
     [service],
   );
   useEffect(() => {
-    heading.current?.focus();
+    heading.current?.focus({ preventScroll: true });
+    document.querySelector(".phone-screen")?.scrollTo(0, 0);
+    window.scrollTo(0, 0);
   }, [mode]);
   useEffect(() => {
-    if (
-      state.payment?.status === "PROCESSING" &&
-      matchMedia("(max-width:760px)").matches
-    )
+    if (state.payment?.status === "PROCESSING")
       viewportRef.current?.scrollIntoView({
         block: "start",
         behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -196,7 +204,9 @@ export default function App() {
     service.dispose();
     setVoice(false);
     setService(new SimulationService());
-    setMode("intro");
+    setMode("details");
+    setPrompt(false);
+    setStatus(initial);
     setScale(1);
     setRotation(0);
     setOutcome("SUCCESS");
@@ -219,176 +229,153 @@ export default function App() {
     if (!r.ok) setIssue(r.message);
     else setIssue("");
   };
-  if (mode === "intro")
+  const retryModel = () => {
+    setStatus(initial);
+    setRetry((n) => n + 1);
+  };
+  if (mode === "intro" || mode === "details") {
+    const home = mode === "intro";
     return (
-      <div className="landing">
-        <header className="nav">
+      <div className="catalog">
+        <header className="catalog-nav">
           <Brand />
-          <a href="#how-it-works" className="nav-link">
-            The experience <span>↗</span>
-          </a>
-          <span className="pill">
-            <i />
-            UNOFFICIAL CONCEPT
-          </span>
+          {!home && (
+            <button
+              className="back-link"
+              onClick={() => {
+                setMode("intro");
+                setPrompt(false);
+              }}
+            >
+              ← Home
+            </button>
+          )}
         </header>
         <main>
-          <section className="hero">
-            <div className="hero-copy">
-              <div className="eyebrow">
-                <span className="line" /> A NEW DIMENSION OF UNDERSTANDING
-              </div>
-              <h1 ref={heading} tabIndex={-1}>
-                Hear it.
-                <br />
-                See it.
-                <br />
-                <span>Try it.</span>
-              </h1>
-              <p className="hero-sub">
-                Meet the Soundbox.
-                <br />
-                On your counter. In your world.
-              </p>
-              <p className="hero-description">
-                Place an illustrative device in your space, discover how it
-                works, and hear a payment demo come to life.
-              </p>
-              <div className="hero-actions">
-                <button className="primary" onClick={() => start("ar")}>
-                  <Icon name="cube" />
-                  Experience in AR
-                  <Icon name="arrow" />
-                </button>
-                <button
-                  className="text-button"
-                  onClick={() => start("practice")}
-                >
-                  Explore without camera <span>↗</span>
-                </button>
-              </div>
-              <p className="camera-note">
-                <Icon name="shield" />
-                Camera only for AR. Microphone only when you choose voice.
-              </p>
-            </div>
-            <div
-              className="hero-visual"
-              aria-label="Original illustrative Soundbox model"
-            >
-              <div className="visual-grid" />
-              <div className="visual-heading">
-                <span>01 / SOUNDBOX</span>
-                <span>SPATIAL PRODUCT DEMO</span>
-              </div>
-              <div className="orbit orbit-one" />
-              <div className="orbit orbit-two" />
-              <div className="floating-label">
-                <span className="sound-bars">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                Small device.
-                <br />
-                <strong>Sound confidence.</strong>
-              </div>
-              <div className="device-shadow" />
-              <div className="css-device">
-                <div className="device-side" />
-                <div className="device-top" />
-                <div className="device-front">
-                  <span className="device-name">
-                    soundbox<span>●</span>
-                  </span>
-                  <div className="demo-pattern">
-                    <div className="finder f1" />
-                    <div className="finder f2" />
-                    <div className="finder f3" />
-                    <b>DEMO</b>
-                  </div>
-                  <span className="device-caption">
-                    ILLUSTRATIVE · NO PAYMENT QR
-                  </span>
-                  <div className="speaker-grille" />
-                  <span className="device-foot">reality lab</span>
-                </div>
-              </div>
-              <div className="placement-mark">
-                <span>+</span>
-                <i />
-                <span>+</span>
-              </div>
-              <div className="visual-footer">
-                <span>
-                  <i />
-                  ORIGINAL ILLUSTRATIVE MODEL
-                </span>
-                <span>NO REAL MONEY MOVES</span>
-              </div>
-            </div>
-          </section>
-          <section
-            className="steps"
-            id="how-it-works"
-            aria-label="How it works"
-          >
-            <div className="step-intro">
-              <span className="eyebrow">FROM CURIOUS TO CONFIDENT</span>
-              <h2>
-                A closer look.
-                <br />A clearer picture.
-              </h2>
-            </div>
-            {[
-              [
-                "01",
-                "Place in your space",
-                "Scan a textured counter and place the device at an illustrative real-world scale.",
-                "cube",
-              ],
-              [
-                "02",
-                "Ask. Explore. Understand.",
-                "Discover the speaker, QR area and connectivity with a contextual product guide.",
-                "mic",
-              ],
-              [
-                "03",
-                "Hear the moment",
-                "Try a ₹250 simulated payment. A little sound brings the idea to life.",
-                "speaker",
-              ],
-            ].map(([n, title, copy, icon]) => (
-              <article key={n}>
-                <div className="step-top">
-                  <span>{n}</span>
-                  <Icon name={icon} />
-                </div>
-                <h3>{title}</h3>
-                <p>{copy}</p>
-              </article>
-            ))}
-          </section>
-          <div className="trust-line">
-            <Icon name="shield" />
-            <p>
-              Built for learning. Every transaction is simulated. No payment
-              details, no account connection, no money moved.
+          <div className="catalog-heading">
+            <p className="kicker">
+              {home ? "PRODUCT EXPERIENCES" : "PRODUCT DETAILS"}
             </p>
-            <span>EXPLORE WITH CONFIDENCE</span>
+            <h1 ref={heading} tabIndex={-1}>
+              {home ? (
+                <>
+                  Spatial <em>studio.</em>
+                </>
+              ) : (
+                <>
+                  Soundbox <em>5.0</em>
+                </>
+              )}
+            </h1>
+            <p>
+              {home
+                ? "Explore the devices behind the counter."
+                : "Explore the speaker, controls and demo QR in 3D."}
+            </p>
           </div>
+          <article className="product-card">
+            <div className="product-stage">
+              <div className="stage-caption">
+                <span className="live-dot" />
+                3D preview
+              </div>
+              <LoadBoundary key={retry} label="Product viewer">
+                <Suspense fallback={null}>
+                  <Stage
+                    mode="practice"
+                    onStatus={setStatus}
+                    sessionRef={sessionRef}
+                    feature={null}
+                    scale={1}
+                    rotation={0}
+                  />
+                </Suspense>
+              </LoadBoundary>
+              {status.error ? (
+                <div className="asset-message" role="alert">
+                  <p>{status.error}</p>
+                  <button onClick={retryModel}>Retry viewer</button>
+                </div>
+              ) : (
+                <span className="orbit-hint" role="status">
+                  {status.state === "READY"
+                    ? "⟲  Drag to rotate"
+                    : "Loading Soundbox…"}
+                </span>
+              )}
+            </div>
+            <div className="product-copy">
+              {home ? (
+                <>
+                  <p className="kicker">COUNTERTOP AUDIO</p>
+                  <h2>Soundbox 5.0</h2>
+                  <p>
+                    Discover the device and hear a simulated payment
+                    confirmation.
+                  </p>
+                  <button
+                    className="primary wide"
+                    onClick={() => setMode("details")}
+                  >
+                    Explore Soundbox <Icon name="arrow" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h2>Try it on your counter</h2>
+                  <p>
+                    Place the Soundbox in your space, then try a ₹250 demo
+                    payment.
+                  </p>
+                  {!prompt && (
+                    <button
+                      className="primary wide"
+                      onClick={() => setPrompt(true)}
+                    >
+                      <Icon name="cube" />
+                      Experience in AR <Icon name="arrow" />
+                    </button>
+                  )}
+                  {prompt &&
+                    (mobileDevice() ? (
+                      <section className="permission-step">
+                        <p>
+                          AR uses your rear camera to find a surface. Camera
+                          frames stay on this device.
+                        </p>
+                        <button
+                          className="primary wide"
+                          onClick={() => start("ar")}
+                        >
+                          Enable camera
+                        </button>
+                      </section>
+                    ) : (
+                      <Suspense fallback={<p>Preparing phone link…</p>}>
+                        <PhoneHandoff />
+                      </Suspense>
+                    ))}
+                  <button
+                    className="alternate"
+                    onClick={() => start("practice")}
+                  >
+                    Explore without camera <span>↗</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </article>
         </main>
-        <footer>
-          <Brand />
+        <footer className="catalog-footer">
           <Legal />
-          <span className="edition">EXPERIMENT 001 · 2026</span>
         </footer>
       </div>
     );
-  const canPlace = mode === "practice" ? !state.placed : status.canPlace;
+  }
+  const canPlace =
+    mode === "practice"
+      ? status.state === "READY" && !state.placed
+      : status.canPlace;
   const feature = state.feature ? featureInfo[state.feature] : null;
   return (
     <div className={`experience ${mode}`}>
@@ -410,11 +397,11 @@ export default function App() {
         >
           <div className="viewport-top">
             <div>
-              <span className="eyebrow">01 / SOUNDBOX</span>
+              <span className="eyebrow">SOUNDBOX 5.0</span>
               <h1 ref={heading} tabIndex={-1}>
                 {mode === "practice"
-                  ? "A closer look."
-                  : "Your counter. Reimagined."}
+                  ? "Practice tabletop"
+                  : "Scan your counter"}
               </h1>
             </div>
             <span className={`tracking ${state.tracking ? "good" : ""}`}>
@@ -444,9 +431,7 @@ export default function App() {
             </Suspense>
           </LoadBoundary>
           {mode === "practice" && <div className="practice-grid" />}
-          <div className="model-note">
-            ILLUSTRATIVE MODEL · NOT A PAYMENT QR
-          </div>
+          <div className="model-note">DEMO MODEL · NON-PAYABLE QR</div>
           {!state.placed && !status.error && (
             <div className="placement-guide">
               <span className="scan-symbol">
@@ -454,10 +439,10 @@ export default function App() {
               </span>
               <h2>
                 {mode === "practice"
-                  ? "Make yourself at home."
+                  ? "Place your Soundbox"
                   : canPlace
-                    ? "A good spot. Make it yours."
-                    : "Find a steady surface."}
+                    ? "Surface found"
+                    : "Find a flat counter"}
               </h2>
               <p>
                 {mode === "practice"
@@ -482,17 +467,19 @@ export default function App() {
                   setRetry((n) => n + 1);
                 }}
               >
-                Retry AR
+                {mode === "ar" ? "Retry AR" : "Retry viewer"}
               </button>
-              <button
-                className="primary"
-                onClick={() => {
-                  sessionRef.current?.dispose();
-                  start("practice");
-                }}
-              >
-                Explore without camera
-              </button>
+              {mode === "ar" && (
+                <button
+                  className="primary"
+                  onClick={() => {
+                    sessionRef.current?.dispose();
+                    start("practice");
+                  }}
+                >
+                  Explore without camera
+                </button>
+              )}
             </div>
           )}
           {mode === "ar" &&
@@ -556,7 +543,7 @@ export default function App() {
             <span>
               {mode === "practice"
                 ? "Drag to rotate · Scroll to zoom"
-                : "8th Wall world tracking · Device testing unverified"}
+                : "Aim at a textured, well-lit surface"}
             </span>
             {state.placed && (
               <button
@@ -574,12 +561,7 @@ export default function App() {
         </section>
         <aside className="inspector">
           <div className="inspector-heading">
-            <span className="eyebrow">MEET YOUR COUNTER COMPANION</span>
-            <h2>
-              More than
-              <br />a little speaker.
-            </h2>
-            <p>A simple idea, brought into your space.</p>
+            <h2>Explore the Soundbox</h2>
           </div>
           <div className="feature-buttons" aria-label="Explore features">
             {(["speaker", "qr", "power", "connectivity"] as Feature[]).map(
@@ -616,7 +598,7 @@ export default function App() {
             </div>
           )}
           <details className="adjust">
-            <summary>Adjust illustrative model</summary>
+            <summary>Adjust model</summary>
             <label>
               Scale · {Math.round(scale * 100)}%
               <input
