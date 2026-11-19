@@ -4,6 +4,8 @@ Explore Soundbox 5.0 in an interactive 3D viewer, place it on a counter using mo
 
 This independent concept is unaffiliated with Paytm. The product sticker encodes the text `PAYTM REALITY LAB DEMO - NOT A PAYMENT CODE`. No money moves.
 
+[Mobile product details](docs/screenshots/soundbox-mobile-390.jpg) · [Desktop phone frame](docs/screenshots/soundbox-desktop-1440.jpg)
+
 ## Run locally
 
 Requires Node 22.18+ (tested Node 26.7.0), npm and a WebGL-capable browser.
