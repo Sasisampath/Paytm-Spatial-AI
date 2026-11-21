@@ -30,15 +30,12 @@ for (const [width, height] of [
     });
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { name: "Spatial studio." }),
+      page.getByRole("heading", { name: "Welcome to your counter." }),
     ).toBeVisible();
     expect(await page.evaluate(() => (window as any).__mediaCalls)).toBe(0);
     expect(
       await page.locator("body").evaluate((e) => e.scrollWidth <= innerWidth),
     ).toBe(true);
-    await expect(
-      page.getByText("Drag to rotate", { exact: false }),
-    ).toBeVisible();
     if (browserName === "chromium")
       await page.screenshot({
         path: `docs/screenshots/intro-${width}.png`,
@@ -47,6 +44,9 @@ for (const [width, height] of [
     await page.getByRole("button", { name: "Explore Soundbox" }).click();
     await expect(
       page.getByRole("heading", { name: "Soundbox 5.0" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Drag to rotate", { exact: false }),
     ).toBeVisible();
     if (browserName === "chromium")
       await page.screenshot({ path: `docs/screenshots/details-${width}.png` });
@@ -86,10 +86,9 @@ for (const [width, height] of [
       .getByRole("button", { name: "Simulate payment", exact: true })
       .click();
     await expect(page.getByRole("alert")).toContainText("₹1 to ₹10,000");
-    await page.getByRole("button", { name: "Ask your AI guide" }).click();
     await expect(
-      page.getByText("Demo mode (voice AI unavailable).", { exact: false }),
-    ).toBeVisible();
+      page.getByRole("button", { name: "Ask your AI guide" }),
+    ).toHaveCount(0);
     expect(await page.evaluate(() => (window as any).__mediaCalls)).toBe(0);
     await page.getByRole("button", { name: "End session" }).click();
     await expect(
