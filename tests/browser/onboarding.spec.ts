@@ -97,3 +97,16 @@ test("recovers from mismatched saved IDs and searches across categories", async 
     ),
   ).toEqual({ categoryId: "individual-services", subcategoryId: "freelance" });
 });
+
+test("splash presents supplied branding before startup navigation", async ({page,browserName}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.clock.install({time: new Date("2026-01-01T00:00:00Z")});
+  await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
+  await page.goto("/");
+  const logo = page.getByRole("img",{name:"Paytm for Business"});
+  await expect(logo).toBeVisible();
+  await logo.evaluate(image => (image as HTMLImageElement).decode());
+  if (browserName === "chromium") await page.screenshot({path:"docs/screenshots/onboarding-splash-390.png"});
+  await page.clock.runFor(100);
+  await expect(page.getByRole("searchbox")).toBeVisible();
+});
