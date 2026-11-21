@@ -1,0 +1,192 @@
+.merchant-home,
+.merchant-details,
+.merchant-summary {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: #002970;
+  min-height: calc(
+    100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+  );
+}
+@media (min-width: 560px) {
+  .desktop :is(.merchant-home, .merchant-details, .merchant-summary) {
+    min-height: calc(100% - 32px);
+  }
+}
+.merchant-home main,
+.merchant-details main {
+  flex: 1;
+}
+.merchant-home main {
+  padding: 16px;
+}
+.merchant-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  padding: 20px 14px 20px 18px;
+  background: linear-gradient(120deg, #eafaff, #d5f2ff);
+  border-radius: 18px;
+}
+.merchant-welcome h1,
+.detail-banner h1,
+.summary-body h1 {
+  font-size: clamp(25px, 7.5cqw, 32px);
+  line-height: 1.08;
+  letter-spacing: -1.3px;
+  margin: 7px 0;
+}
+.merchant-welcome p:last-child {
+  font-size: 13px;
+  color: #204968;
+}
+.merchant-welcome img {
+  width: 35%;
+  height: auto;
+  align-self: end;
+  margin-bottom: -20px;
+}
+.merchant-home h2,
+.merchant-scenario h2 {
+  font-size: 20px;
+  letter-spacing: -0.6px;
+  margin: 19px 0 3px;
+}
+.merchant-lead,
+.merchant-scenario p,
+.summary-body p {
+  font-size: 14px;
+  color: #455e70;
+}
+.merchant-grid,
+.merchant-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+.merchant-grid button,
+.merchant-features > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: start;
+  gap: 4px;
+  text-align: left;
+  border: 1px solid #d8e5ec;
+  background: white;
+  border-radius: 15px;
+  padding: 12px;
+}
+.merchant-grid button:first-child {
+  background: #f4fbff;
+  border-color: #8bc9e8;
+}
+.merchant-grid img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
+.merchant-grid strong {
+  font-size: 16px;
+  color: #002970;
+}
+.merchant-grid small,
+.merchant-features small {
+  font-size: 12px;
+  color: #506778;
+  font-weight: 400;
+}
+.merchant-grid span {
+  font-size: 11px;
+  color: #006da4;
+  margin-top: auto;
+  padding-top: 6px;
+}
+.merchant-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 6;
+  background: white;
+  border-top: 1px solid #deebf1;
+  padding: 10px 16px max(10px, env(safe-area-inset-bottom));
+  display: grid;
+  gap: 4px;
+}
+.merchant-actions .primary {
+  background: #002970;
+  min-height: 46px;
+  width: 100%;
+  margin: 0;
+}
+.merchant-actions .alternate {
+  margin: 0;
+}
+.detail-banner {
+  background: #002970;
+  color: white;
+  padding: 16px 20px;
+}
+.detail-banner .kicker {
+  color: #83e4ff;
+}
+.detail-banner p:last-child {
+  font-size: 14px;
+}
+.merchant-details .product-stage {
+  height: clamp(210px, 61cqw, 265px);
+}
+.merchant-features,
+.merchant-scenario,
+.merchant-details .legal {
+  margin: 14px 16px;
+}
+.merchant-features > div {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  align-items: center;
+  gap: 3px 7px;
+  background: #f5faff;
+}
+.merchant-features small {
+  grid-column: 1/-1;
+}
+.preview-story img,
+.summary-body img {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  display: block;
+  margin: 20px auto;
+}
+.preview-story p + p,
+.summary-body p {
+  margin: 10px 0;
+}
+.summary-body {
+  margin: auto 16px;
+  padding: 20px 0;
+}
+.merchant-summary header {
+  padding: 16px;
+  border-bottom: 1px solid #deebf1;
+}
+.summary-body strong {
+  display: block;
+  background: #e9f8ff;
+  color: #002970;
+  border-radius: 12px;
+  padding: 14px;
+}
+.merchant-actions:has(.permission-step),
+.merchant-actions:has(.handoff) {
+  max-height: 65dvh;
+  overflow: auto;
+}
+
+.inspector .demo-controls {margin:0 0 20px;padding:16px;border-radius:16px;background:#f0f9ff}
+.payment-card button {min-height:44px}
+.practice .viewport {height:clamp(430px,72dvh,620px)}

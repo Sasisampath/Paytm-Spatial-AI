@@ -29,8 +29,8 @@ export default function Onboarding() {
     });
     return () => cancelAnimationFrame(frame);
   }, [brandReady, saved, screen]);
-  if (screen === "app")
-    return <App changeBusiness={() => setScreen("select")} />;
+  if (screen === "app" && saved)
+    return <App business={saved} changeBusiness={() => setScreen("select")} />;
   if (screen === "splash")
     return (
       <main className="onboard splash" aria-label="Loading Reality Lab">
@@ -129,7 +129,7 @@ function CategoryPicker({
         <input
           type="search"
           aria-label="Search categories and subcategories"
-          placeholder="Search category or sub-category"
+          placeholder="Search categories"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />

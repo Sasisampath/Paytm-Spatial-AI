@@ -16,11 +16,18 @@ import {
   knowledge,
   sources,
 } from "../data/paytm-soundbox-knowledge";
+import { businessCategories } from "../data/business-categories";
+import {
+  products,
+  recommendedProducts,
+  type ProductId,
+} from "../data/merchant-products";
+import "../styles/merchant.css";
 import { announceDemo } from "../lib/voice/announcer";
 import { mobileDevice } from "../lib/ar/mobile";
 const PhoneHandoff = lazy(() => import("../components/PhoneHandoff"));
 const Stage = lazy(() => import("../components/ar/Stage"));
-const Voice = lazy(() => import("../lib/voice/VoicePanel"));
+
 function Icon({ name }: { name: string }) {
   const paths: Record<string, React.ReactNode> = {
     arrow: (
@@ -130,15 +137,18 @@ const initial: ARSnapshot = {
 };
 export default function App({
   changeBusiness,
+  business,
 }: {
   changeBusiness: () => void;
+  business: { categoryId: string; subcategoryId: string };
 }) {
-  const [mode, setMode] = useState<"intro" | "details" | "ar" | "practice">(
-      "intro",
-    ),
+  const [mode, setMode] = useState<
+      "intro" | "details" | "ar" | "practice" | "summary"
+    >("intro"),
     [service, setService] = useState(() => new SimulationService()),
     [prompt, setPrompt] = useState(false),
-    [voice, setVoice] = useState(false),
+    [product, setProduct] = useState<ProductId>("soundbox"),
+    [receipt, setReceipt] = useState({ amount: "", success: false }),
     [amount, setAmount] = useState("250"),
     [issue, setIssue] = useState(""),
     [status, setStatus] = useState(initial),
@@ -166,7 +176,7 @@ export default function App({
     heading.current?.focus({ preventScroll: true });
     document.querySelector(".phone-screen")?.scrollTo(0, 0);
     window.scrollTo(0, 0);
-  }, [mode]);
+  }, [mode, product]);
   useEffect(() => {
     if (state.payment?.status === "PROCESSING")
       viewportRef.current?.scrollIntoView({
@@ -179,11 +189,11 @@ export default function App({
   useEffect(() => () => service.dispose(), [service]);
   useEffect(() => {
     const p = state.payment;
-    if (voice || p?.status !== "SUCCESS" || spoken.current === p.id) return;
+    if (p?.status !== "SUCCESS" || spoken.current === p.id) return;
     spoken.current = p.id;
     if (document.hidden) return;
     return announceDemo(p.amountPaise, () => {});
-  }, [state.payment, voice]);
+  }, [state.payment]);
   useEffect(() => {
     const stop = () => {
       if (document.hidden) {
@@ -206,7 +216,7 @@ export default function App({
     sessionRef.current?.dispose();
     window.speechSynthesis?.cancel();
     service.dispose();
-    setVoice(false);
+
     setService(new SimulationService());
     setMode("details");
     setPrompt(false);
@@ -237,150 +247,243 @@ export default function App({
     setStatus(initial);
     setRetry((n) => n + 1);
   };
-  if (mode === "intro" || mode === "details") {
-    const home = mode === "intro";
+  const category = businessCategories.find(
+    (c) => c.id === business.categoryId,
+  )!;
+  const businessName = category.subcategories.find(
+    (c) => c.id === business.subcategoryId,
+  )!.label;
+  const order = recommendedProducts(category.id);
+  const recommended = order[0];
+  const current = products[product];
+  const open = (id: ProductId) => {
+    setProduct(id);
+    setPrompt(false);
+    setStatus(initial);
+    setMode("details");
+  };
+  const scenario =
+    category.id === "individual-services"
+      ? "After an appointment, hear the sample confirmation while preparing for your next customer."
+      : "While packing a customer’s order, hear the sample confirmation without looking away from the counter.";
+  if (mode === "summary")
     return (
-      <div className="catalog">
+      <main className="merchant-summary">
+        <header>
+          <Brand />
+        </header>
+        <div className="summary-body">
+          <img
+            src="/assets/products/soundbox.png"
+            alt="Soundbox illustration"
+          />
+          <p className="kicker">EXPERIENCE SUMMARY</p>
+          <h1 ref={heading} tabIndex={-1}>
+            {receipt.success ? "Demo complete" : "Demo payment failed"}
+          </h1>
+          <p>{businessName}</p>
+          <strong>
+            {receipt.amount} ·{" "}
+            {receipt.success ? "Simulated confirmation" : "Simulated failure"}
+          </strong>
+          <p>
+            {receipt.success
+              ? "A spoken payment alert can help you keep serving the customer at the counter."
+              : "This selected test outcome produced no success announcement. You can run the demo again."}
+          </p>
+          <small>No money moved. Independent concept.</small>
+        </div>
+        <div className="merchant-actions">
+          <button className="primary wide" onClick={() => open("soundbox")}>
+            Try again
+          </button>
+          <button onClick={() => setMode("intro")}>
+            Explore another product
+          </button>
+        </div>
+      </main>
+    );
+  if (mode === "intro")
+    return (
+      <div className="merchant-home">
         <header className="catalog-nav">
           <Brand />
-          {home && (
-            <button className="back-link" onClick={changeBusiness}>
-              Change business
-            </button>
-          )}
-          {!home && (
-            <button
-              className="back-link"
-              onClick={() => {
-                setMode("intro");
-                setPrompt(false);
-              }}
-            >
-              ← Home
-            </button>
-          )}
+          <button className="back-link" onClick={changeBusiness}>
+            Change business
+          </button>
         </header>
         <main>
-          <div className="catalog-heading">
-            <p className="kicker">
-              {home ? "PRODUCT EXPERIENCES" : "PRODUCT DETAILS"}
-            </p>
-            <h1 ref={heading} tabIndex={-1}>
-              {home ? (
-                <>
-                  Spatial <em>studio.</em>
-                </>
-              ) : (
-                <>
-                  Soundbox <em>5.0</em>
-                </>
-              )}
-            </h1>
-            <p>
-              {home
-                ? "Explore the devices behind the counter."
-                : "Explore the speaker, controls and demo QR in 3D."}
-            </p>
+          <div className="merchant-welcome">
+            <div>
+              <p className="kicker">YOUR BUSINESS</p>
+              <h1 ref={heading} tabIndex={-1}>
+                Welcome to your counter.
+              </h1>
+              <p>{businessName}</p>
+            </div>
+            <img alt="" src="/assets/products/merchant.png" />
           </div>
-          <article className="product-card">
-            <div className="product-stage">
-              <div className="stage-caption">
-                <span className="live-dot" />
-                3D preview
-              </div>
-              <LoadBoundary key={retry} label="Product viewer">
-                <Suspense fallback={null}>
-                  <Stage
-                    mode="practice"
-                    onStatus={setStatus}
-                    sessionRef={sessionRef}
-                    feature={null}
-                    scale={1}
-                    rotation={0}
-                  />
-                </Suspense>
-              </LoadBoundary>
-              {status.error ? (
-                <div className="asset-message" role="alert">
-                  <p>{status.error}</p>
-                  <button onClick={retryModel}>Retry viewer</button>
-                </div>
-              ) : (
-                <span className="orbit-hint" role="status">
-                  {status.state === "READY"
-                    ? "⟲  Drag to rotate"
-                    : "Loading Soundbox…"}
+          <h2>Products for your business</h2>
+          <p className="merchant-lead">
+            {recommended === "soundbox"
+              ? "Start with audio alerts for busy checkouts."
+              : "Start with a QR checkout for your customers."}
+          </p>
+          <div className="merchant-grid">
+            {order.map((id) => (
+              <button
+                key={id}
+                onClick={() => open(id)}
+                aria-label={products[id].name}
+              >
+                <img alt="" src={`/assets/products/${id}.png`} />
+                <strong>{products[id].name}</strong>
+                <small>{products[id].benefit}</small>
+                <span>
+                  {id === "soundbox" ? "AR & 3D demo" : "Product preview"} ↗
                 </span>
-              )}
-            </div>
-            <div className="product-copy">
-              {home ? (
-                <>
-                  <p className="kicker">COUNTERTOP AUDIO</p>
-                  <h2>Soundbox 5.0</h2>
-                  <p>
-                    Discover the device and hear a simulated payment
-                    confirmation.
-                  </p>
-                  <button
-                    className="primary wide"
-                    onClick={() => setMode("details")}
-                  >
-                    Explore Soundbox <Icon name="arrow" />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <h2>Try it on your counter</h2>
-                  <p>
-                    Place the Soundbox in your space, then try a ₹250 demo
-                    payment.
-                  </p>
-                  {!prompt && (
-                    <button
-                      className="primary wide"
-                      onClick={() => setPrompt(true)}
-                    >
-                      <Icon name="cube" />
-                      Experience in AR <Icon name="arrow" />
-                    </button>
-                  )}
-                  {prompt &&
-                    (mobileDevice() ? (
-                      <section className="permission-step">
-                        <p>
-                          AR uses your rear camera to find a surface. Camera
-                          frames stay on this device.
-                        </p>
-                        <button
-                          className="primary wide"
-                          onClick={() => start("ar")}
-                        >
-                          Enable camera
-                        </button>
-                      </section>
-                    ) : (
-                      <Suspense fallback={<p>Preparing phone link…</p>}>
-                        <PhoneHandoff />
-                      </Suspense>
-                    ))}
-                  <button
-                    className="alternate"
-                    onClick={() => start("practice")}
-                  >
-                    Explore without camera <span>↗</span>
-                  </button>
-                </>
-              )}
-            </div>
-          </article>
-        </main>
-        <footer className="catalog-footer">
+              </button>
+            ))}
+          </div>
           <Legal />
-        </footer>
+        </main>
+        <div className="merchant-actions">
+          <button className="primary wide" onClick={() => open(recommended)}>
+            Explore{" "}
+            {recommended === "soundbox"
+              ? "Soundbox"
+              : products[recommended].name}{" "}
+            <Icon name="arrow" />
+          </button>
+        </div>
       </div>
     );
-  }
+  if (mode === "details")
+    return (
+      <div className="merchant-details">
+        <header className="catalog-nav">
+          <button className="back-link" onClick={() => setMode("intro")}>
+            ← Home
+          </button>
+          <strong>{current.name}</strong>
+        </header>
+        <main>
+          <div className="detail-banner">
+            <p className="kicker">
+              {product === "soundbox"
+                ? "INTERACTIVE PRODUCT DEMO"
+                : "PRODUCT PREVIEW"}
+            </p>
+            <h1 ref={heading} tabIndex={-1}>
+              {current.name}
+            </h1>
+            <p>{current.benefit}</p>
+          </div>
+          {product === "soundbox" ? (
+            <>
+              <div className="product-stage">
+                {" "}
+                <LoadBoundary key={retry} label="Product viewer">
+                  <Suspense fallback={null}>
+                    <Stage
+                      mode="practice"
+                      onStatus={setStatus}
+                      sessionRef={sessionRef}
+                      feature={null}
+                      scale={1}
+                      rotation={0}
+                    />
+                  </Suspense>
+                </LoadBoundary>
+                {status.error ? (
+                  <div className="asset-message" role="alert">
+                    <p>{status.error}</p>
+                    <button onClick={retryModel}>Retry viewer</button>
+                  </div>
+                ) : (
+                  <span className="orbit-hint" role="status">
+                    {status.state === "READY"
+                      ? "⟲  Drag to rotate"
+                      : "Loading Soundbox…"}
+                  </span>
+                )}
+              </div>
+              <div className="merchant-features">
+                {[
+                  ["speaker", "Speaker", "Hear a demo alert"],
+                  ["qr", "Demo QR", "Inspect the front panel"],
+                  ["power", "Controls", "Explore the top buttons"],
+                  ["connectivity", "Indicator", "Find the status display"],
+                ].map(([icon, name, copy]) => (
+                  <div key={icon}>
+                    <Icon name={icon} />
+                    <strong>{name}</strong>
+                    <small>{copy}</small>
+                  </div>
+                ))}
+              </div>
+              <section className="merchant-scenario">
+                <h2>At your counter</h2>
+                <p>{scenario} Try it with a simulated ₹250 payment.</p>
+              </section>
+            </>
+          ) : (
+            <section className="merchant-scenario preview-story">
+              <img alt="" src={`/assets/products/${product}.png`} />
+              <h2>{current.benefit}</h2>
+              <p>{current.use}</p>
+              <p>
+                This is an information preview. You can try interactive 3D and
+                AR with Soundbox 5.0.
+              </p>
+            </section>
+          )}
+          <Legal />
+        </main>
+        <div className="merchant-actions">
+          {product === "soundbox" ? (
+            <>
+              {" "}
+              {!prompt && (
+                <button
+                  className="primary wide"
+                  onClick={() => setPrompt(true)}
+                >
+                  <Icon name="cube" />
+                  Experience in AR <Icon name="arrow" />
+                </button>
+              )}
+              {prompt &&
+                (mobileDevice() ? (
+                  <section className="permission-step">
+                    <p>
+                      AR uses your rear camera to find a surface. Camera frames
+                      stay on this device.
+                    </p>
+                    <button
+                      className="primary wide"
+                      onClick={() => start("ar")}
+                    >
+                      Enable camera
+                    </button>
+                  </section>
+                ) : (
+                  <Suspense fallback={<p>Preparing phone link…</p>}>
+                    <PhoneHandoff />
+                  </Suspense>
+                ))}
+              <button className="alternate" onClick={() => start("practice")}>
+                Explore without camera <span>↗</span>
+              </button>
+            </>
+          ) : (
+            <button className="primary wide" onClick={() => open("soundbox")}>
+              Explore Soundbox
+            </button>
+          )}
+        </div>
+      </div>
+    );
   const canPlace =
     mode === "practice"
       ? status.state === "READY" && !state.placed
@@ -546,6 +649,24 @@ export default function App({
               >
                 Try another demo ↗
               </button>
+              {state.payment.status !== "PROCESSING" && (
+                <button
+                  onClick={() => {
+                    setReceipt({
+                      amount:
+                        "₹" +
+                        (state.payment!.amountPaise / 100).toLocaleString(
+                          "en-IN",
+                        ),
+                      success: state.payment!.status === "SUCCESS",
+                    });
+                    end();
+                    setMode("summary");
+                  }}
+                >
+                  View summary
+                </button>
+              )}
             </div>
           )}
           <div className="viewport-bottom">
@@ -569,6 +690,59 @@ export default function App({
           </div>
         </section>
         <aside className="inspector">
+          <section className="demo-controls">
+            <div className="section-title">
+              <span>TRY THE MOMENT</span>
+              <span className="tiny-pill">SIMULATION</span>
+            </div>
+            <h3>Hear a payment come to life.</h3>
+            <label className="amount-label">
+              Demo amount in rupees
+              <div className="amount-input">
+                <span>₹</span>
+                <input
+                  aria-label="Demo amount in rupees"
+                  inputMode="decimal"
+                  type="number"
+                  min="1"
+                  max="10000"
+                  step=".01"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+              </div>
+            </label>
+            <button
+              className="primary wide"
+              disabled={!state.placed || !state.tracking || !!state.payment}
+              onClick={simulate}
+            >
+              <Icon name="speaker" />
+              Simulate payment
+              <Icon name="arrow" />
+            </button>
+            <p className="fine-print">₹1–₹10,000 · Synthetic demo only</p>
+            <details className="test-options">
+              <summary>Demo outcome</summary>
+              <label>
+                <select
+                  aria-label="Demo outcome"
+                  value={outcome}
+                  onChange={(e) =>
+                    setOutcome(e.target.value as "SUCCESS" | "FAILED")
+                  }
+                >
+                  <option value="SUCCESS">Successful demo</option>
+                  <option value="FAILED">Failed demo (for testing)</option>
+                </select>
+              </label>
+            </details>
+            {issue && (
+              <p role="alert" className="issue">
+                {issue}
+              </p>
+            )}
+          </section>
           <div className="inspector-heading">
             <h2>Explore the Soundbox</h2>
           </div>
@@ -633,74 +807,6 @@ export default function App({
               />
             </label>
           </details>
-          <section className="demo-controls">
-            <div className="section-title">
-              <span>TRY THE MOMENT</span>
-              <span className="tiny-pill">SIMULATION</span>
-            </div>
-            <h3>Hear a payment come to life.</h3>
-            <label className="amount-label">
-              Demo amount in rupees
-              <div className="amount-input">
-                <span>₹</span>
-                <input
-                  aria-label="Demo amount in rupees"
-                  inputMode="decimal"
-                  type="number"
-                  min="1"
-                  max="10000"
-                  step=".01"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-              </div>
-            </label>
-            <button
-              className="primary wide"
-              disabled={!state.placed || !state.tracking || !!state.payment}
-              onClick={simulate}
-            >
-              <Icon name="speaker" />
-              Simulate payment
-              <Icon name="arrow" />
-            </button>
-            <p className="fine-print">₹1–₹10,000 · Synthetic demo only</p>
-            <details className="test-options">
-              <summary>Demo outcome</summary>
-              <label>
-                <select
-                  aria-label="Demo outcome"
-                  value={outcome}
-                  onChange={(e) =>
-                    setOutcome(e.target.value as "SUCCESS" | "FAILED")
-                  }
-                >
-                  <option value="SUCCESS">Successful demo</option>
-                  <option value="FAILED">Failed demo (for testing)</option>
-                </select>
-              </label>
-            </details>
-            {issue && (
-              <p role="alert" className="issue">
-                {issue}
-              </p>
-            )}
-          </section>
-          <button className="ask-ai" onClick={() => setVoice((v) => !v)}>
-            <span className="mini-orb">∿</span>
-            <span>
-              <strong>Ask your AI guide</strong>
-              <small>Explore together with voice</small>
-            </span>
-            <Icon name="arrow" />
-          </button>
-          {voice && (
-            <LoadBoundary label="Voice guide">
-              <Suspense fallback={<p role="status">Loading voice controls…</p>}>
-                <Voice service={service} close={() => setVoice(false)} />
-              </Suspense>
-            </LoadBoundary>
-          )}
           <section className="faq">
             <div className="section-title">A LITTLE MORE TO KNOW</div>
             {knowledge.map((k) => (
