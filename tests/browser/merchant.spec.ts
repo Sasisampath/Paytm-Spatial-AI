@@ -4,6 +4,9 @@ test("salon product recommendations, previews and completed practice journey", a
   browserName,
 }) => {
   const errors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
   page.on("pageerror", (error) => errors.push(error.message));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
@@ -18,6 +21,11 @@ test("salon product recommendations, previews and completed practice journey", a
       nodes.map((n) => n.getAttribute("aria-label")),
     ),
   ).toEqual(["All-in-One QR", "Soundbox 5.0", "Card Machine", "Merchant Loan"]);
+  await cards
+    .locator("img")
+    .evaluateAll(async (images) =>
+      Promise.all(images.map((image) => (image as HTMLImageElement).decode())),
+    );
   for (const name of ["All-in-One QR", "Card Machine", "Merchant Loan"]) {
     await page.getByRole("button", { name, exact: true }).click();
     await expect(
@@ -29,6 +37,19 @@ test("salon product recommendations, previews and completed practice journey", a
     await page.getByRole("button", { name: "← Home" }).click();
   }
   await page.getByRole("button", { name: "Soundbox 5.0", exact: true }).click();
+  await expect(
+    page.getByText("Drag to rotate", { exact: false }),
+  ).toBeVisible();
+  const canvas = page.locator(".product-stage canvas");
+  const before = await canvas.screenshot();
+  const box = (await canvas.boundingBox())!;
+  await page.mouse.move(box.x + box.width * 0.4, box.y + box.height * 0.5);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.65, box.y + box.height * 0.5, {
+    steps: 8,
+  });
+  await page.mouse.up();
+  expect((await canvas.screenshot()).equals(before)).toBe(false);
   await page.getByRole("button", { name: "Explore without camera" }).click();
   await page.getByRole("button", { name: "Place practice device" }).click();
   if (browserName === "chromium")

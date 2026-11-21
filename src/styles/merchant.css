@@ -187,6 +187,24 @@
   overflow: auto;
 }
 
-.inspector .demo-controls {margin:0 0 20px;padding:16px;border-radius:16px;background:#f0f9ff}
-.payment-card button {min-height:44px}
-.practice .viewport {height:clamp(430px,72dvh,620px)}
+.inspector .demo-controls {
+  margin: 0 0 20px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #f0f9ff;
+}
+.payment-card button {
+  min-height: 44px;
+}
+.practice .viewport {
+  height: clamp(430px, 72dvh, 620px);
+}
+@container app (max-width: 350px) {
+  .merchant-home .catalog-nav {
+    padding-inline: 12px;
+    gap: 8px;
+  }
+  .merchant-home .catalog-nav .brand {
+    font-size: 16px;
+  }
+}
