@@ -1,4 +1,9 @@
 import { test, expect } from "@playwright/test";
+import { withSavedBusiness } from "./returning-business";
+test.beforeEach(async ({ page }) => {
+  await withSavedBusiness(page);
+});
+
 async function mockXR(page: any) {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "userAgent", { value: "Android Mobile" });

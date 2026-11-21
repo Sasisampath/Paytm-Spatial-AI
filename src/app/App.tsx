@@ -128,7 +128,11 @@ const initial: ARSnapshot = {
   error: null,
   source: "none",
 };
-export default function App() {
+export default function App({
+  changeBusiness,
+}: {
+  changeBusiness: () => void;
+}) {
   const [mode, setMode] = useState<"intro" | "details" | "ar" | "practice">(
       "intro",
     ),
@@ -239,6 +243,11 @@ export default function App() {
       <div className="catalog">
         <header className="catalog-nav">
           <Brand />
+          {home && (
+            <button className="back-link" onClick={changeBusiness}>
+              Change business
+            </button>
+          )}
           {!home && (
             <button
               className="back-link"

@@ -1,4 +1,9 @@
 import { test, expect } from "@playwright/test";
+import { withSavedBusiness } from "./returning-business";
+test.beforeEach(async ({ page }) => {
+  await withSavedBusiness(page);
+});
+
 import { fileURLToPath } from "node:url";
 for (const variant of ["ar", "hero"] as const) {
   test(`${variant} has decoded textures, scale, anchors, highlights and disposal`, async ({

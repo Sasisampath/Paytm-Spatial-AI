@@ -1,0 +1,207 @@
+.onboard {
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  background: white;
+  color: #002970;
+  overflow: hidden;
+}
+@media (min-width: 560px) {
+  .desktop .onboard {
+    height: calc(100% - 32px);
+  }
+}
+.splash {
+  position: relative;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border-bottom: 12px solid #002970;
+  box-shadow: inset 0 -7px #00baf2;
+}
+.splash-brand img {
+  width: min(82%, 310px);
+  display: block;
+  margin: auto;
+}
+.splash-brand p {
+  font-weight: 700;
+  font-size: 24px;
+  margin: -12px 0 3px;
+}
+.splash-brand small {
+  color: #526379;
+  font-size: 11px;
+}
+.splash-dots {
+  position: absolute;
+  bottom: 15%;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.splash-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #002970;
+  animation: pulse-dot 1s ease-in-out infinite alternate;
+}
+.splash-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+  background: #0056a4;
+}
+.splash-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+  background: #008dc4;
+}
+.splash-dots i:last-child {
+  animation-delay: 0.45s;
+  background: #00baf2;
+}
+@keyframes pulse-dot {
+  to {
+    opacity: 0.4;
+    transform: scale(0.75);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash-dots i {
+    animation: none;
+  }
+}
+.picker {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+.picker header {
+  display: flex;
+  align-items: center;
+  padding: 20px 16px 10px;
+  gap: 8px;
+}
+.picker header button {
+  padding: 0;
+  min-width: 44px;
+}
+.picker h1 {
+  font-size: clamp(18px, 5.4cqw, 23px);
+  line-height: 1.21;
+  letter-spacing: -0.6px;
+  margin: 0;
+}
+.business-search {
+  display: flex;
+  align-items: center;
+  margin: 4px 14px 14px;
+  padding: 0 12px;
+  gap: 8px;
+  border: 1px solid #cad6e1;
+  border-radius: 12px;
+  color: #57728c;
+}
+.business-search:focus-within {
+  outline: 2px solid #0073cf;
+}
+.business-search input {
+  border: 0;
+  background: none;
+  min-width: 0;
+  width: 100%;
+  height: 44px;
+  font-size: 16px;
+  color: #002970;
+}
+.business-options {
+  display: grid;
+  grid-template-columns: minmax(77px, 25%) minmax(0, 1fr);
+  min-height: 0;
+  background: #f5f5f5;
+  border-top: 1px solid #e0e6eb;
+}
+.business-options nav {
+  overflow: auto;
+  border-right: 1px solid #dce3e9;
+  background: #fafbfc;
+}
+.business-options nav button {
+  width: 100%;
+  border-radius: 0;
+  border: 0;
+  border-left: 3px solid transparent;
+  background: transparent;
+  text-align: left;
+  justify-content: flex-start;
+  padding: 18px 8px;
+  font-size: 13px;
+  color: #496078;
+}
+.business-options nav button[aria-pressed="true"] {
+  background: #e9f7ff;
+  color: #002970;
+  border-left-color: #007ad3;
+}
+.business-grid-scroll {
+  overflow: auto;
+  padding: 14px 10px;
+  min-width: 0;
+}
+.business-grid-scroll h2 {
+  font-size: 16px;
+  margin: 0 0 12px;
+}
+.business-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.business-grid button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 4px 12px;
+  border: 2px solid #dce5ec;
+  background: white;
+  color: #002970;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.32;
+  overflow-wrap: anywhere;
+}
+.business-grid button[aria-pressed="true"] {
+  border-color: #006bc7;
+  background: #f3faff;
+}
+.business-grid button[aria-pressed="true"]::after {
+  content: "✓";
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  background: #006bc7;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 11px;
+}
+.business-grid img {
+  width: min(100%, 82px);
+  height: 76px;
+  object-fit: contain;
+}
+.picker footer {
+  display: block;
+  min-height: 0;
+  background: white;
+  border-top: 1px solid #e1e7ed;
+  padding: 10px 16px 14px;
+}
+.picker footer button {
+  background: #002970;
+  color: white;
+  width: 100%;
+  border: 0;
+  min-height: 48px;
+  font-size: 16px;
+  border-radius: 12px;
+}
