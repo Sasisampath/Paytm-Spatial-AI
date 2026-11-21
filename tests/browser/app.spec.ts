@@ -1,4 +1,9 @@
 import { test, expect } from "@playwright/test";
+import { withSavedBusiness } from "./returning-business";
+test.beforeEach(async ({ page }) => {
+  await withSavedBusiness(page);
+});
+
 for (const [width, height] of [
   [320, 568],
   [375, 812],
