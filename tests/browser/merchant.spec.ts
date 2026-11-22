@@ -36,7 +36,10 @@ test("salon product recommendations, previews and completed practice journey", a
     ).toHaveCount(0);
     await page.getByRole("button", { name: "← Home" }).click();
   }
-  await page.getByRole("button", { name: "Soundbox 5.0", exact: true }).click();
+  await page.getByRole("button", { name: "Try Soundbox in AR" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Soundbox 5.0" }),
+  ).toBeVisible();
   await expect(
     page.getByText("Drag to rotate", { exact: false }),
   ).toBeVisible();

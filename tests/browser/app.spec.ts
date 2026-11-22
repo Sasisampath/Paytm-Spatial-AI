@@ -36,12 +36,30 @@ for (const [width, height] of [
     expect(
       await page.locator("body").evaluate((e) => e.scrollWidth <= innerWidth),
     ).toBe(true);
+    const headerGap = await page
+      .locator(".merchant-home-header")
+      .evaluate((header) => {
+        const [brand, action] = Array.from(header.children);
+        return (
+          action.getBoundingClientRect().left -
+          brand.getBoundingClientRect().right
+        );
+      });
+    expect(headerGap).toBeGreaterThan(0);
     if (browserName === "chromium")
       await page.screenshot({
         path: `docs/screenshots/intro-${width}.png`,
         fullPage: true,
       });
-    await page.getByRole("button", { name: "Explore Soundbox" }).click();
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    const bottomCard = (await page
+      .getByRole("button", { name: "Merchant Loan", exact: true })
+      .boundingBox())!;
+    const stickyAction = (await page
+      .getByRole("button", { name: "Try Soundbox in AR" })
+      .boundingBox())!;
+    expect(bottomCard.y + bottomCard.height).toBeLessThan(stickyAction.y);
+    await page.getByRole("button", { name: "Try Soundbox in AR" }).click();
     await expect(
       page.getByRole("heading", { name: "Soundbox 5.0" }),
     ).toBeVisible();
@@ -110,7 +128,7 @@ for (const width of [1280, 1440]) {
       };
     });
     await page.goto("/");
-    await page.getByRole("button", { name: "Explore Soundbox" }).click();
+    await page.getByRole("button", { name: "Try Soundbox in AR" }).click();
     await expect(
       page.getByText("Drag to rotate", { exact: false }),
     ).toBeVisible();
@@ -141,7 +159,7 @@ test("failed outcome, reset, reduced motion, keyboard access", async ({
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await page.getByRole("button", { name: "Explore Soundbox" }).click();
+  await page.getByRole("button", { name: "Try Soundbox in AR" }).click();
   await page.getByRole("button", { name: "Explore without camera" }).click();
   await page.getByRole("button", { name: "Place practice device" }).click();
   await page.getByText("Demo outcome", { exact: true }).click();
@@ -164,7 +182,7 @@ test("desktop view renders the product and source-backed answers", async ({
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
-  await page.getByRole("button", { name: "Explore Soundbox" }).click();
+  await page.getByRole("button", { name: "Try Soundbox in AR" }).click();
   if (browserName === "chromium")
     await page.screenshot({
       path: "docs/screenshots/intro-desktop.png",

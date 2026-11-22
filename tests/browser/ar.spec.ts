@@ -122,7 +122,7 @@ test("synthetic XR requires real support, keeps a world anchor, blocks loss and 
   await mockXR(page);
   await page.goto("/");
   expect(await page.evaluate(() => (window as any).testAR.calls)).toBe(0);
-  await page.getByRole("button", { name: "Explore Soundbox" }).click();
+  await page.getByRole("button", { name: "Try Soundbox in AR" }).click();
   await page.getByRole("button", { name: "Experience in AR" }).click();
   expect(await page.evaluate(() => (window as any).testAR.calls)).toBe(0);
   await page.getByRole("button", { name: "Enable camera" }).click();
@@ -234,7 +234,7 @@ test("AR model failure retries before camera ownership; denied camera is recover
     await route.continue();
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Explore Soundbox" }).click();
+  await page.getByRole("button", { name: "Try Soundbox in AR" }).click();
   await page.getByRole("button", { name: "Experience in AR" }).click();
   await page.getByRole("button", { name: "Enable camera" }).click();
   await expect(page.getByRole("alert")).toContainText("model could not load");

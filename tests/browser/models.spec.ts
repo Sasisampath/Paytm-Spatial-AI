@@ -115,7 +115,7 @@ test("hero fetch failure retries and product navigation shares one download", as
     else await route.continue();
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Explore Soundbox" }).click();
+  await page.getByRole("button", { name: "Try Soundbox in AR" }).click();
   await page.getByRole("button", { name: "Retry viewer" }).click();
   await expect(
     page.getByText("Drag to rotate", { exact: false }),

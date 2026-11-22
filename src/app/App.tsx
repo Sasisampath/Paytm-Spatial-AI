@@ -306,20 +306,28 @@ export default function App({
   if (mode === "intro")
     return (
       <div className="merchant-home">
-        <header className="catalog-nav">
-          <Brand />
-          <button className="back-link" onClick={changeBusiness}>
+        <header className="merchant-home-header">
+          <div className="merchant-home-brand">
+            <span className="merchant-home-logo">
+              <img
+                src="/assets/branding/paytm-for-business.png"
+                alt="Paytm for Business"
+              />
+            </span>
+            <strong>Reality Lab</strong>
+          </div>
+          <button className="merchant-change-business" onClick={changeBusiness}>
             Change business
           </button>
         </header>
         <main>
           <div className="merchant-welcome">
             <div>
-              <p className="kicker">YOUR BUSINESS</p>
               <h1 ref={heading} tabIndex={-1}>
                 Welcome to your counter.
               </h1>
-              <p>{businessName}</p>
+              <p>Find tools for your kind of business.</p>
+              <span className="merchant-business-type">{businessName}</span>
             </div>
             <img alt="" src="/assets/products/merchant.png" />
           </div>
@@ -335,8 +343,16 @@ export default function App({
                 key={id}
                 onClick={() => open(id)}
                 aria-label={products[id].name}
+                data-product={id}
               >
-                <img alt="" src={`/assets/products/${id}.png`} />
+                <div className="merchant-card-art">
+                  <img alt="" src={`/assets/products/${id}.png`} />
+                  {id === "soundbox" && (
+                    <span className="merchant-audio-icon">
+                      <Icon name="speaker" />
+                    </span>
+                  )}
+                </div>
                 <strong>{products[id].name}</strong>
                 <small>{products[id].benefit}</small>
                 <span>
@@ -348,11 +364,8 @@ export default function App({
           <Legal />
         </main>
         <div className="merchant-actions">
-          <button className="primary wide" onClick={() => open(recommended)}>
-            Explore{" "}
-            {recommended === "soundbox"
-              ? "Soundbox"
-              : products[recommended].name}{" "}
+          <button className="primary wide" onClick={() => open("soundbox")}>
+            Try Soundbox in AR
             <Icon name="arrow" />
           </button>
         </div>

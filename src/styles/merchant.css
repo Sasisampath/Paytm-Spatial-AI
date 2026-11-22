@@ -19,17 +19,50 @@
   flex: 1;
 }
 .merchant-home main {
-  padding: 16px;
+  padding: 16px 16px 22px;
 }
-.merchant-welcome {
+.merchant-home-header {
+  min-height: 68px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e6edf4;
+}
+.merchant-home-brand {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  position: relative;
+  gap: 9px;
+  min-width: 0;
+  font-size: 14px;
+}
+.merchant-home-logo {
+  flex: 0 0 54px;
+  height: 39px;
+  display: grid;
+  place-content: center;
   overflow: hidden;
-  padding: 20px 14px 20px 18px;
-  background: linear-gradient(120deg, #eafaff, #d5f2ff);
+}
+.merchant-home-logo img {
+  width: 94px;
+  height: auto;
+}
+.merchant-change-business {
+  flex: none;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border-color: #d5e6f3;
+  color: #002970;
+  background: #f5faff;
+}
+.merchant-welcome {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36%;
+  align-items: center;
+  background: #edf8ff;
   border-radius: 18px;
+  padding: 14px 10px 14px 16px;
 }
 .merchant-welcome h1,
 .detail-banner h1,
@@ -39,15 +72,25 @@
   letter-spacing: -1.3px;
   margin: 7px 0;
 }
-.merchant-welcome p:last-child {
+.merchant-welcome h1 {
+  margin: 0 0 6px;
+  line-height: 1.12;
+}
+.merchant-welcome p {
   font-size: 13px;
-  color: #204968;
+  line-height: 1.4;
+  color: #38536b;
+}
+.merchant-business-type {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #002970;
 }
 .merchant-welcome img {
-  width: 35%;
+  width: 100%;
   height: auto;
-  align-self: end;
-  margin-bottom: -20px;
 }
 .merchant-home h2,
 .merchant-scenario h2 {
@@ -82,13 +125,47 @@
   padding: 12px;
 }
 .merchant-grid button:first-child {
-  background: #f4fbff;
-  border-color: #8bc9e8;
+  border-color: #89c8ea;
 }
-.merchant-grid img {
-  width: 70px;
-  height: 70px;
+.merchant-grid button {
+  line-height: 1.3;
+  border-radius: 17px;
+  min-width: 0;
+  padding: 8px 10px 11px;
+}
+.merchant-card-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: clamp(78px, 22cqw, 95px);
+  background: #f4f8fc;
+  border-radius: 12px;
+}
+.merchant-card-art img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   object-fit: contain;
+}
+[data-product="soundbox"] .merchant-card-art {
+  background: #dff3ff;
+}
+.merchant-audio-icon {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #002970;
+  color: #fff;
+}
+.merchant-audio-icon svg {
+  width: 15px;
+  height: 15px;
 }
 .merchant-grid strong {
   font-size: 16px;
@@ -100,7 +177,7 @@
   color: #506778;
   font-weight: 400;
 }
-.merchant-grid span {
+.merchant-grid button > span {
   font-size: 11px;
   color: #006da4;
   margin-top: auto;
@@ -200,11 +277,13 @@
   height: clamp(430px, 72dvh, 620px);
 }
 @container app (max-width: 350px) {
-  .merchant-home .catalog-nav {
+  .merchant-home-header {
     padding-inline: 12px;
-    gap: 8px;
   }
-  .merchant-home .catalog-nav .brand {
-    font-size: 16px;
+  .merchant-home-brand {
+    gap: 6px;
+  }
+  .merchant-change-business {
+    font-size: 12px;
   }
 }
