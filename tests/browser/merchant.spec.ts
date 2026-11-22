@@ -34,18 +34,18 @@ test("salon product recommendations, previews and completed practice journey", a
       page.getByRole("heading", { name, exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Experience in AR" }),
+      page.getByRole("button", { name: "Place in my space" }),
     ).toHaveCount(0);
     await page.getByRole("button", { name: "← Home" }).click();
   }
   await page.getByRole("button", { name: "Try Soundbox in AR" }).click();
   await expect(
-    page.getByRole("heading", { name: "Soundbox 5.0" }),
+    page.getByRole("heading", { name: "Hear your payment confirmations." }),
   ).toBeVisible();
   await expect(
     page.getByText("Drag to rotate", { exact: false }),
   ).toBeVisible();
-  const canvas = page.locator(".product-stage canvas");
+  const canvas = page.locator(".soundbox-viewer canvas");
   const before = await canvas.screenshot();
   const box = (await canvas.boundingBox())!;
   await page.mouse.move(box.x + box.width * 0.4, box.y + box.height * 0.5);
@@ -55,7 +55,7 @@ test("salon product recommendations, previews and completed practice journey", a
   });
   await page.mouse.up();
   expect((await canvas.screenshot()).equals(before)).toBe(false);
-  await page.getByRole("button", { name: "Explore without camera" }).click();
+  await page.getByRole("button", { name: "Explore in 3D" }).click();
   await page.getByRole("button", { name: "Place practice device" }).click();
   if (browserName === "chromium")
     await page.screenshot({ path: "docs/screenshots/demo-tabletop.png" });

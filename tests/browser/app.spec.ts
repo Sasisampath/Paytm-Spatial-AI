@@ -60,14 +60,16 @@ for (const [width, height] of [
     expect(bottomCard.y + bottomCard.height).toBeLessThan(stickyAction.y);
     await page.getByRole("button", { name: "Try Soundbox in AR" }).click();
     await expect(
-      page.getByRole("heading", { name: "Soundbox 5.0" }),
+      page.getByRole("heading", { name: "Hear your payment confirmations." }),
     ).toBeVisible();
     await expect(
-      page.getByText("Drag to rotate", { exact: false }),
+      page.getByText("Swipe to rotate", { exact: true }),
     ).toBeVisible();
     if (browserName === "chromium")
-      await page.screenshot({ path: `docs/screenshots/details-${width}.png` });
-    await page.getByRole("button", { name: "Explore without camera" }).click();
+      await page.screenshot({
+        path: `docs/screenshots/soundbox-details-${width}.png`,
+      });
+    await page.getByRole("button", { name: "Explore in 3D" }).click();
     await expect(
       page.getByRole("button", { name: "Simulate payment", exact: true }),
     ).toBeDisabled();
@@ -109,7 +111,7 @@ for (const [width, height] of [
     expect(await page.evaluate(() => (window as any).__mediaCalls)).toBe(0);
     await page.getByRole("button", { name: "End session" }).click();
     await expect(
-      page.getByRole("button", { name: "Experience in AR" }),
+      page.getByRole("button", { name: "Place in my space" }),
     ).toBeVisible();
   });
 }
@@ -145,9 +147,9 @@ for (const width of [1280, 1440]) {
     ).toBe(true);
     if (browserName === "chromium")
       await page.screenshot({
-        path: `docs/screenshots/phone-frame-${width}.png`,
+        path: `docs/screenshots/soundbox-details-desktop-${width}.png`,
       });
-    await page.getByRole("button", { name: "Experience in AR" }).click();
+    await page.getByRole("button", { name: "Place in my space" }).click();
     await expect(
       page.getByRole("heading", { name: "Open on your phone" }),
     ).toBeVisible();
@@ -163,7 +165,7 @@ test("failed outcome, reset, reduced motion, keyboard access", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await page.getByRole("button", { name: "Try Soundbox in AR" }).click();
-  await page.getByRole("button", { name: "Explore without camera" }).click();
+  await page.getByRole("button", { name: "Explore in 3D" }).click();
   await page.getByRole("button", { name: "Place practice device" }).click();
   await page.getByText("Demo outcome", { exact: true }).click();
   await page.getByLabel("Demo outcome").selectOption("FAILED");
@@ -191,7 +193,7 @@ test("desktop view renders the product and source-backed answers", async ({
       path: "docs/screenshots/intro-desktop.png",
       fullPage: true,
     });
-  await page.getByRole("button", { name: "Explore without camera" }).click();
+  await page.getByRole("button", { name: "Explore in 3D" }).click();
   await page.getByRole("button", { name: "Place practice device" }).click();
   await page.getByRole("button", { name: /Connectivity/ }).click();
   await expect(page.getByText("Connected for confirmation.")).toBeVisible();
@@ -209,4 +211,48 @@ test("desktop view renders the product and source-backed answers", async ({
         { exact: true },
       ),
   ).toBeVisible();
+});
+
+test("Soundbox details keep the actions clear of a bottom safe area and return to Products", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() =>
+    Object.defineProperty(navigator, "userAgent", {
+      value: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)",
+    }),
+  );
+  await page.goto("/");
+  const openSoundbox = page.getByRole("button", { name: "Try Soundbox in AR" });
+  await openSoundbox.click();
+
+  const back = page.getByRole("button", { name: "Back to products" });
+  const place = page.getByRole("button", { name: "Place in my space" });
+  const practice = page.getByRole("button", { name: "Explore in 3D" });
+  for (const control of [back, place, practice]) {
+    expect((await control.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  }
+
+  const screen = page.locator(".soundbox-details");
+  await screen.evaluate((element) =>
+    element.style.setProperty("--soundbox-bottom-inset", "34px"),
+  );
+  const license = page.getByRole("link", { name: /8th Wall engine/ });
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  const actions = (await page.locator(".soundbox-actions").boundingBox())!;
+  const licenseBox = (await license.boundingBox())!;
+  const practiceBox = (await practice.boundingBox())!;
+  expect(licenseBox.y + licenseBox.height).toBeLessThanOrEqual(actions.y);
+  expect(practiceBox.y + practiceBox.height).toBeLessThanOrEqual(844 - 34);
+  await expect(practice).toBeInViewport();
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  await place.click();
+  await expect(
+    page.getByRole("button", { name: "Enable camera" }),
+  ).toBeVisible();
+  await back.click();
+  await expect(openSoundbox).toBeVisible();
+  await openSoundbox.click();
+  await expect(place).toBeVisible();
 });

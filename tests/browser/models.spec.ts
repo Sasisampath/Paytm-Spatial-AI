@@ -120,7 +120,7 @@ test("hero fetch failure retries and product navigation shares one download", as
   await expect(
     page.getByText("Drag to rotate", { exact: false }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Explore without camera" }).click();
+  await page.getByRole("button", { name: "Explore in 3D" }).click();
   await expect(
     page.getByRole("button", { name: "Place practice device" }),
   ).toBeEnabled();

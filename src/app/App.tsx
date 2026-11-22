@@ -35,6 +35,10 @@ function Icon({ name }: { name: string }) {
         <path d="M5 12h14M13 6l6 6-6 6" />
       </>
     ),
+    "chevron-left": <path d="m15 5-7 7 7 7" />,
+    sliders: (
+      <path d="M3 6h8m4 0h6M3 12h3m4 0h11M3 18h11m4 0h3M11 3v6M6 9v6m8 0v6" />
+    ),
     cube: (
       <>
         <path d="m12 3 9 5-9 5-9-5 9-5ZM3 8v9l9 5 9-5V8M12 13v9" />
@@ -262,10 +266,6 @@ export default function App({
     setStatus(initial);
     setMode("details");
   };
-  const scenario =
-    category.id === "individual-services"
-      ? "After an appointment, hear the sample confirmation while preparing for your next customer."
-      : "While packing a customer’s order, hear the sample confirmation without looking away from the counter.";
   if (mode === "summary")
     return (
       <main className="merchant-summary">
@@ -371,6 +371,129 @@ export default function App({
         </div>
       </div>
     );
+  if (mode === "details" && product === "soundbox")
+    return (
+      <div className="merchant-details soundbox-details">
+        <header className="soundbox-navigation">
+          <button
+            className="soundbox-back"
+            aria-label="Back to products"
+            onClick={() => setMode("intro")}
+          >
+            <Icon name="chevron-left" />
+            Products
+          </button>
+          <strong>Soundbox</strong>
+        </header>
+        <main>
+          <div className="soundbox-hero">
+            <div className="soundbox-viewer">
+              <LoadBoundary key={retry} label="Product viewer">
+                <Suspense fallback={null}>
+                  <Stage
+                    mode="practice"
+                    onStatus={setStatus}
+                    sessionRef={sessionRef}
+                    feature={null}
+                    scale={1}
+                    rotation={0}
+                  />
+                </Suspense>
+              </LoadBoundary>
+              {status.error && (
+                <div className="asset-message" role="alert">
+                  <p>{status.error}</p>
+                  <button onClick={retryModel}>Retry viewer</button>
+                </div>
+              )}
+            </div>
+            {!status.error && (
+              <p className="soundbox-viewer-hint" role="status">
+                {status.state === "READY" ? (
+                  <>
+                    <span className="soundbox-touch-hint">Swipe to rotate</span>
+                    <span className="soundbox-pointer-hint">
+                      Drag to rotate
+                    </span>
+                  </>
+                ) : (
+                  "Loading Soundbox…"
+                )}
+              </p>
+            )}
+          </div>
+          <section className="soundbox-intro">
+            <p className="soundbox-model-name">Soundbox 5.0</p>
+            <h1 ref={heading} tabIndex={-1}>
+              Hear your payment confirmations.
+            </h1>
+            <p>
+              Explore the device and hear what a simulated payment sounds like
+              at your counter.
+            </p>
+          </section>
+          <section
+            className="soundbox-features"
+            aria-labelledby="soundbox-features-title"
+          >
+            <h2 id="soundbox-features-title">Explore the device</h2>
+            <ul role="list">
+              {[
+                [
+                  "speaker",
+                  "Payment alerts",
+                  "Hear a sample announcement in the demo",
+                ],
+                ["qr", "QR panel", "Inspect the demo QR on the front"],
+                [
+                  "sliders",
+                  "Controls and status",
+                  "Find the buttons and status display",
+                ],
+              ].map(([icon, name, copy]) => (
+                <li key={icon}>
+                  <Icon name={icon} />
+                  <div>
+                    <h3>{name}</h3>
+                    <p>{copy}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+          <Legal />
+        </main>
+        <div className="merchant-actions soundbox-actions">
+          {!prompt && (
+            <button className="primary wide" onClick={() => setPrompt(true)}>
+              Place in my space
+            </button>
+          )}
+          {prompt &&
+            (mobileDevice() ? (
+              <section className="permission-step">
+                <p>
+                  AR uses your rear camera to find a surface. Camera frames stay
+                  on this device.
+                </p>
+                <button className="primary wide" onClick={() => start("ar")}>
+                  Enable camera
+                </button>
+              </section>
+            ) : (
+              <Suspense fallback={<p>Preparing phone link…</p>}>
+                <PhoneHandoff />
+              </Suspense>
+            ))}
+          <button
+            className="soundbox-practice"
+            onClick={() => start("practice")}
+          >
+            Explore in 3D
+          </button>
+        </div>
+      </div>
+    );
   if (mode === "details")
     return (
       <div className="merchant-details">
@@ -382,118 +505,27 @@ export default function App({
         </header>
         <main>
           <div className="detail-banner">
-            <p className="kicker">
-              {product === "soundbox"
-                ? "INTERACTIVE PRODUCT DEMO"
-                : "PRODUCT PREVIEW"}
-            </p>
+            <p className="kicker">PRODUCT PREVIEW</p>
             <h1 ref={heading} tabIndex={-1}>
               {current.name}
             </h1>
             <p>{current.benefit}</p>
           </div>
-          {product === "soundbox" ? (
-            <>
-              <div className="product-stage">
-                {" "}
-                <LoadBoundary key={retry} label="Product viewer">
-                  <Suspense fallback={null}>
-                    <Stage
-                      mode="practice"
-                      onStatus={setStatus}
-                      sessionRef={sessionRef}
-                      feature={null}
-                      scale={1}
-                      rotation={0}
-                    />
-                  </Suspense>
-                </LoadBoundary>
-                {status.error ? (
-                  <div className="asset-message" role="alert">
-                    <p>{status.error}</p>
-                    <button onClick={retryModel}>Retry viewer</button>
-                  </div>
-                ) : (
-                  <span className="orbit-hint" role="status">
-                    {status.state === "READY"
-                      ? "⟲  Drag to rotate"
-                      : "Loading Soundbox…"}
-                  </span>
-                )}
-              </div>
-              <div className="merchant-features">
-                {[
-                  ["speaker", "Speaker", "Hear a demo alert"],
-                  ["qr", "Demo QR", "Inspect the front panel"],
-                  ["power", "Controls", "Explore the top buttons"],
-                  ["connectivity", "Indicator", "Find the status display"],
-                ].map(([icon, name, copy]) => (
-                  <div key={icon}>
-                    <Icon name={icon} />
-                    <strong>{name}</strong>
-                    <small>{copy}</small>
-                  </div>
-                ))}
-              </div>
-              <section className="merchant-scenario">
-                <h2>At your counter</h2>
-                <p>{scenario} Try it with a simulated ₹250 payment.</p>
-              </section>
-            </>
-          ) : (
-            <section className="merchant-scenario preview-story">
-              <img alt="" src={`/assets/products/${product}.png`} />
-              <h2>{current.benefit}</h2>
-              <p>{current.use}</p>
-              <p>
-                This is an information preview. You can try interactive 3D and
-                AR with Soundbox 5.0.
-              </p>
-            </section>
-          )}
+          <section className="merchant-scenario preview-story">
+            <img alt="" src={`/assets/products/${product}.png`} />
+            <h2>{current.benefit}</h2>
+            <p>{current.use}</p>
+            <p>
+              This is an information preview. You can try interactive 3D and AR
+              with Soundbox 5.0.
+            </p>
+          </section>
           <Legal />
         </main>
         <div className="merchant-actions">
-          {product === "soundbox" ? (
-            <>
-              {" "}
-              {!prompt && (
-                <button
-                  className="primary wide"
-                  onClick={() => setPrompt(true)}
-                >
-                  <Icon name="cube" />
-                  Experience in AR <Icon name="arrow" />
-                </button>
-              )}
-              {prompt &&
-                (mobileDevice() ? (
-                  <section className="permission-step">
-                    <p>
-                      AR uses your rear camera to find a surface. Camera frames
-                      stay on this device.
-                    </p>
-                    <button
-                      className="primary wide"
-                      onClick={() => start("ar")}
-                    >
-                      Enable camera
-                    </button>
-                  </section>
-                ) : (
-                  <Suspense fallback={<p>Preparing phone link…</p>}>
-                    <PhoneHandoff />
-                  </Suspense>
-                ))}
-              <button className="alternate" onClick={() => start("practice")}>
-                Explore without camera <span>↗</span>
-              </button>
-            </>
-          ) : (
-            <button className="primary wide" onClick={() => open("soundbox")}>
-              Explore Soundbox
-            </button>
-          )}
+          <button className="primary wide" onClick={() => open("soundbox")}>
+            Explore Soundbox
+          </button>
         </div>
       </div>
     );
