@@ -65,10 +65,12 @@ for (const [width, height] of [
     await expect(
       page.getByText("Swipe to rotate", { exact: true }),
     ).toBeVisible();
-    if (browserName === "chromium")
+    if (browserName === "chromium") {
+      await page.mouse.move(width - 2, 2);
       await page.screenshot({
         path: `docs/screenshots/soundbox-details-${width}.png`,
       });
+    }
     await page.getByRole("button", { name: "Explore in 3D" }).click();
     await expect(
       page.getByRole("button", { name: "Simulate payment", exact: true }),
@@ -145,10 +147,12 @@ for (const width of [1280, 1440]) {
         .locator(".phone-screen")
         .evaluate((el) => el.clientWidth === el.scrollWidth),
     ).toBe(true);
-    if (browserName === "chromium")
+    if (browserName === "chromium") {
+      await page.mouse.move(width - 2, 2);
       await page.screenshot({
         path: `docs/screenshots/soundbox-details-desktop-${width}.png`,
       });
+    }
     await page.getByRole("button", { name: "Place in my space" }).click();
     await expect(
       page.getByRole("heading", { name: "Open on your phone" }),

@@ -426,6 +426,16 @@
 .soundbox-practice {
   width: 100%;
 }
+.soundbox-practice:hover:not(:disabled),
+.soundbox-back:hover:not(:disabled) {
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.soundbox-navigation button:active,
+.soundbox-actions button:active {
+  opacity: 0.75;
+}
 .soundbox-actions :is(.permission-step, .handoff) {
   margin-top: 0;
 }
