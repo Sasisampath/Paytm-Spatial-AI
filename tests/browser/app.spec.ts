@@ -48,8 +48,7 @@ for (const [width, height] of [
     expect(headerGap).toBeGreaterThan(0);
     if (browserName === "chromium")
       await page.screenshot({
-        path: `docs/screenshots/intro-${width}.png`,
-        fullPage: true,
+        path: `docs/screenshots/home-grocery-${width}.png`,
       });
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     const bottomCard = (await page
@@ -128,6 +127,10 @@ for (const width of [1280, 1440]) {
       };
     });
     await page.goto("/");
+    const homeAction = page.getByRole("button", { name: "Try Soundbox in AR" });
+    await expect(homeAction).toBeVisible();
+    if (browserName === "chromium" && width === 1440)
+      await page.screenshot({ path: "docs/screenshots/home-desktop-1440.png" });
     await page.getByRole("button", { name: "Try Soundbox in AR" }).click();
     await expect(
       page.getByText("Drag to rotate", { exact: false }),

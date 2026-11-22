@@ -15,6 +15,8 @@ test("salon product recommendations, previews and completed practice journey", a
     .click();
   await page.getByRole("button", { name: "Salon / Beauty Services" }).click();
   await page.getByRole("button", { name: "Confirm" }).click();
+  if (browserName === "chromium")
+    await page.screenshot({ path: "docs/screenshots/home-salon-390.png" });
   const cards = page.locator(".merchant-grid button");
   expect(
     await cards.evaluateAll((nodes) =>
